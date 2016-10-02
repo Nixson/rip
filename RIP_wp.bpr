@@ -1,0 +1,196 @@
+<?xml version='1.0' encoding='utf-8' ?>
+<!-- C++Builder XML Project -->
+<PROJECT>
+  <MACROS>
+    <VERSION value="BCB.06.00"/>
+    <PROJECT value="RIP_wp.exe"/>
+    <OBJFILES value="RIP_wp.obj MainUnit.obj SettingsUnit.obj DrawUnit.obj ProgressUnit.obj 
+      RasterUnit.obj RasterSettingsUnit.obj ThresholdUnit.obj CommandUnit.obj 
+      mymath.obj alglib\fasttransforms.obj alglib\ap.obj 
+      alglib\alglibinternal.obj Raster.obj TargetUnit.obj MeasureUnit.obj 
+      CreateCoord.obj ControlOptionsUnit.obj OrgMUnit.obj OrgDMUnit.obj 
+      OrgCMUnit.obj ScatterUnit.obj formChanels.obj SettingsUnitRLM.obj 
+      ShowThread.obj"/>
+    <RESFILES value="RIP_wp.res"/>
+    <IDLFILES value=""/>
+    <IDLGENFILES value=""/>
+    <DEFFILE value=""/>
+    <RESDEPEN value="$(RESFILES) MainUnit.dfm SettingsUnit.dfm DrawUnit.dfm ProgressUnit.dfm 
+      RasterUnit.dfm RasterSettingsUnit.dfm ThresholdUnit.dfm TargetUnit.dfm 
+      MeasureUnit.dfm ControlOptionsUnit.dfm OrgMUnit.dfm OrgDMUnit.dfm 
+      OrgCMUnit.dfm ScatterUnit.dfm formChanels.dfm SettingsUnitRLM.dfm"/>
+    <LIBFILES value=""/>
+    <LIBRARIES value="inet.lib indy.lib bdertl.lib dbrtl.lib teedb.lib teeui.lib tee.lib 
+      vclx.lib bcbsmp.lib rtl.lib vcl.lib"/>
+    <SPARELIBS value="vcl.lib rtl.lib bcbsmp.lib vclx.lib tee.lib teeui.lib teedb.lib dbrtl.lib 
+      bdertl.lib indy.lib inet.lib"/>
+    <PACKAGES value="vcl.bpi rtl.bpi dbrtl.bpi adortl.bpi vcldb.bpi vclx.bpi bdertl.bpi 
+      vcldbx.bpi ibxpress.bpi dsnap.bpi cds.bpi bdecds.bpi qrpt.bpi teeui.bpi 
+      teedb.bpi tee.bpi dss.bpi teeqr.bpi visualclx.bpi visualdbclx.bpi 
+      dsnapcrba.bpi dsnapcon.bpi bcbsmp.bpi vclie.bpi xmlrtl.bpi inet.bpi 
+      inetdbbde.bpi inetdbxpress.bpi inetdb.bpi nmfast.bpi webdsnap.bpi 
+      bcbie.bpi websnap.bpi soaprtl.bpi dclocx.bpi dbexpress.bpi dbxcds.bpi 
+      indy.bpi bcb2kaxserver.bpi"/>
+    <PATHCPP value=".;alglib;alglib;alglib"/>
+    <PATHPAS value=".;"/>
+    <PATHRC value=".;"/>
+    <PATHASM value=".;"/>
+    <DEBUGLIBPATH value="$(BCB)\lib\debug"/>
+    <RELEASELIBPATH value="$(BCB)\lib\release"/>
+    <LINKER value="ilink32"/>
+    <USERDEFINES value="_DEBUG"/>
+    <SYSDEFINES value="NO_STRICT"/>
+    <MAINSOURCE value="RIP_wp.cpp"/>
+    <INCLUDEPATH value="&quot;C:\Program Files (x86)\Borland\CBuilder6\Projects&quot;;&quot;C:\Program Files\Borland\CBuilder6\Projects&quot;;..\Diagram;&quot;C:\Program Files (x86)\Borland\CBuilder6\1\Projects&quot;;alglib;$(BCB)\include;$(BCB)\include\vcl;Include"/>
+    <LIBPATH value="&quot;C:\Program Files (x86)\Borland\CBuilder6\Projects&quot;;&quot;C:\Program Files\Borland\CBuilder6\Projects&quot;;..\Diagram;&quot;C:\Program Files (x86)\Borland\CBuilder6\1\Projects&quot;;alglib;$(BCB)\Projects\Lib;$(BCB)\lib\obj;$(BCB)\lib;Lib"/>
+    <WARNINGS value="-w-sus -w-spa -w-ret -w-rch -w-pia -w-par -w-8027 -w-ccc -w-big -w-bei 
+      -w-aus"/>
+    <OTHERFILES value=""/>
+  </MACROS>
+  <OPTIONS>
+    <IDLCFLAGS value="-I&quot;C:\Program Files (x86)\Borland\CBuilder6\Projects&quot; 
+      -I&quot;C:\Program Files\Borland\CBuilder6\Projects&quot; -I..\Diagram 
+      -I&quot;C:\Program Files (x86)\Borland\CBuilder6\1\Projects&quot; -Ialglib 
+      -I$(BCB)\include -I$(BCB)\include\vcl -IInclude -src_suffix cpp -D_DEBUG 
+      -boa"/>
+    <CFLAG1 value="-Od -H=$(BCB)\lib\vcl60.csm -Hc -Q -Vx -Ve -fp -ff -X- -r- -a8 -5 -b- -k 
+      -y -v -vi- -c -tW -tWM"/>
+    <PFLAGS value="-$Y+ -$W -$O- -$A8 -v -JPHNE -M"/>
+    <RFLAGS value=""/>
+    <AFLAGS value="/mx /w2 /zi"/>
+    <LFLAGS value="-D&quot;&quot; -aa -Tpe -x -v"/>
+    <OTHERFILES value=""/>
+  </OPTIONS>
+  <LINKER>
+    <ALLOBJ value="c0w32.obj sysinit.obj $(OBJFILES)"/>
+    <ALLRES value="$(RESFILES)"/>
+    <ALLLIB value="$(LIBFILES) $(LIBRARIES) import32.lib cp32mt.lib"/>
+    <OTHERFILES value=""/>
+  </LINKER>
+  <FILELIST>
+      <FILE FILENAME="RIP_wp.res" FORMNAME="" UNITNAME="RIP_wp.res" CONTAINERID="ResTool" DESIGNCLASS="" LOCALCOMMAND=""/>
+      <FILE FILENAME="RIP_wp.cpp" FORMNAME="" UNITNAME="RIP_wp" CONTAINERID="CCompiler" DESIGNCLASS="" LOCALCOMMAND=""/>
+      <FILE FILENAME="MainUnit.cpp" FORMNAME="formMain" UNITNAME="MainUnit" CONTAINERID="CCompiler" DESIGNCLASS="" LOCALCOMMAND=""/>
+      <FILE FILENAME="SettingsUnit.cpp" FORMNAME="formSettings" UNITNAME="SettingsUnit" CONTAINERID="CCompiler" DESIGNCLASS="" LOCALCOMMAND=""/>
+      <FILE FILENAME="DrawUnit.cpp" FORMNAME="formDraw" UNITNAME="DrawUnit" CONTAINERID="CCompiler" DESIGNCLASS="" LOCALCOMMAND=""/>
+      <FILE FILENAME="ProgressUnit.cpp" FORMNAME="formProgress" UNITNAME="ProgressUnit" CONTAINERID="CCompiler" DESIGNCLASS="" LOCALCOMMAND=""/>
+      <FILE FILENAME="RasterUnit.cpp" FORMNAME="formRaster" UNITNAME="RasterUnit" CONTAINERID="CCompiler" DESIGNCLASS="" LOCALCOMMAND=""/>
+      <FILE FILENAME="RasterSettingsUnit.cpp" FORMNAME="formRasterSettings" UNITNAME="RasterSettingsUnit" CONTAINERID="CCompiler" DESIGNCLASS="" LOCALCOMMAND=""/>
+      <FILE FILENAME="ThresholdUnit.cpp" FORMNAME="ThresholdForm" UNITNAME="ThresholdUnit" CONTAINERID="CCompiler" DESIGNCLASS="" LOCALCOMMAND=""/>
+      <FILE FILENAME="CommandUnit.cpp" FORMNAME="" UNITNAME="CommandUnit" CONTAINERID="CCompiler" DESIGNCLASS="" LOCALCOMMAND=""/>
+      <FILE FILENAME="mymath.cpp" FORMNAME="" UNITNAME="mymath" CONTAINERID="CCompiler" DESIGNCLASS="" LOCALCOMMAND=""/>
+      <FILE FILENAME="mymath.h" FORMNAME="" UNITNAME="mymath.h" CONTAINERID="" DESIGNCLASS="" LOCALCOMMAND=""/>
+      <FILE FILENAME="params.h" FORMNAME="" UNITNAME="params.h" CONTAINERID="" DESIGNCLASS="" LOCALCOMMAND=""/>
+      <FILE FILENAME="alglib\fasttransforms.cpp" FORMNAME="" UNITNAME="fasttransforms" CONTAINERID="CCompiler" DESIGNCLASS="" LOCALCOMMAND=""/>
+      <FILE FILENAME="alglib\ap.cpp" FORMNAME="" UNITNAME="ap" CONTAINERID="CCompiler" DESIGNCLASS="" LOCALCOMMAND=""/>
+      <FILE FILENAME="alglib\alglibinternal.cpp" FORMNAME="" UNITNAME="alglibinternal" CONTAINERID="CCompiler" DESIGNCLASS="" LOCALCOMMAND=""/>
+      <FILE FILENAME="Raster.cpp" FORMNAME="" UNITNAME="Raster" CONTAINERID="CCompiler" DESIGNCLASS="" LOCALCOMMAND=""/>
+      <FILE FILENAME="TargetUnit.cpp" FORMNAME="formTargetDraw" UNITNAME="TargetUnit" CONTAINERID="CCompiler" DESIGNCLASS="" LOCALCOMMAND=""/>
+      <FILE FILENAME="MeasureUnit.cpp" FORMNAME="formMeasureSettings" UNITNAME="MeasureUnit" CONTAINERID="CCompiler" DESIGNCLASS="" LOCALCOMMAND=""/>
+      <FILE FILENAME="CreateCoord.cpp" FORMNAME="" UNITNAME="CreateCoord" CONTAINERID="CCompiler" DESIGNCLASS="" LOCALCOMMAND=""/>
+      <FILE FILENAME="ControlOptionsUnit.cpp" FORMNAME="FormControlOptions" UNITNAME="ControlOptionsUnit" CONTAINERID="CCompiler" DESIGNCLASS="" LOCALCOMMAND=""/>
+      <FILE FILENAME="OrgMUnit.cpp" FORMNAME="FormOrgM" UNITNAME="OrgMUnit" CONTAINERID="CCompiler" DESIGNCLASS="" LOCALCOMMAND=""/>
+      <FILE FILENAME="OrgDMUnit.cpp" FORMNAME="FormOrgDM" UNITNAME="OrgDMUnit" CONTAINERID="CCompiler" DESIGNCLASS="" LOCALCOMMAND=""/>
+      <FILE FILENAME="OrgCMUnit.cpp" FORMNAME="FormOrgCM" UNITNAME="OrgCMUnit" CONTAINERID="CCompiler" DESIGNCLASS="" LOCALCOMMAND=""/>
+      <FILE FILENAME="ScatterUnit.cpp" FORMNAME="ScatterForm" UNITNAME="ScatterUnit" CONTAINERID="CCompiler" DESIGNCLASS="" LOCALCOMMAND=""/>
+      <FILE FILENAME="formChanels.cpp" FORMNAME="Fchanels" UNITNAME="formChanels" CONTAINERID="CCompiler" DESIGNCLASS="" LOCALCOMMAND=""/>
+      <FILE FILENAME="SettingsUnitRLM.cpp" FORMNAME="SettingsUnitForm" UNITNAME="SettingsUnitRLM" CONTAINERID="CCompiler" DESIGNCLASS="" LOCALCOMMAND=""/>
+      <FILE FILENAME="ShowThread.cpp" FORMNAME="" UNITNAME="ShowThread" CONTAINERID="CCompiler" DESIGNCLASS="" LOCALCOMMAND=""/>
+  </FILELIST>
+  <BUILDTOOLS>
+  </BUILDTOOLS>
+
+  <IDEOPTIONS>
+[Version Info]
+IncludeVerInfo=0
+AutoIncBuild=0
+MajorVer=1
+MinorVer=0
+Release=0
+Build=0
+Debug=0
+PreRelease=0
+Special=0
+Private=0
+DLL=0
+Locale=1049
+CodePage=1251
+
+[Version Info Keys]
+CompanyName=
+FileDescription=
+FileVersion=1.0.0.0
+InternalName=
+LegalCopyright=
+LegalTrademarks=
+OriginalFilename=
+ProductName=
+ProductVersion=1.0.0.0
+Comments=
+
+[HistoryLists\hlIncludePath]
+Count=10
+Item0=C:\Program Files (x86)\Borland\CBuilder6\Projects;C:\Program Files\Borland\CBuilder6\Projects;..\Diagram;C:\Program Files (x86)\Borland\CBuilder6\1\Projects;alglib;$(BCB)\include;$(BCB)\include\vcl;Include
+Item1=C:\Program Files\Borland\CBuilder6\Projects;..\Diagram;C:\Program Files (x86)\Borland\CBuilder6\1\Projects;alglib;$(BCB)\include;$(BCB)\include\vcl;Include
+Item2=..\Diagram;C:\Program Files (x86)\Borland\CBuilder6\1\Projects;alglib;$(BCB)\include;$(BCB)\include\vcl;Include
+Item3=alglib;$(BCB)\include;$(BCB)\include\vcl;Include
+Item4=alglib;..\..\COM_ADC_ALL\COM_ADC_CHILD_PELENG_IMIT;C:\Windows\system32;C:\Program Files (x86)\Borland\CBuilder6\1\Projects;E:\work\!PC_SW_DESIGNS\ETHERNET\RIP_wp;$(BCB)\include;$(BCB)\include\vcl;Include
+Item5=..\..\COM_ADC_ALL\COM_ADC_CHILD_PELENG_IMIT;C:\Windows\system32;C:\Program Files (x86)\Borland\CBuilder6\1\Projects;E:\work\!PC_SW_DESIGNS\ETHERNET\RIP_wp;$(BCB)\include;$(BCB)\include\vcl;Include
+Item6=C:\Windows\system32;C:\Program Files (x86)\Borland\CBuilder6\1\Projects;E:\work\!PC_SW_DESIGNS\ETHERNET\RIP_wp;$(BCB)\include;$(BCB)\include\vcl;Include
+Item7=..\RIP;C:\Windows\system32;C:\Program Files (x86)\Borland\CBuilder6\1\Projects;E:\work\!PC_SW_DESIGNS\ETHERNET\RIP_wp;$(BCB)\include;$(BCB)\include\vcl;Include
+Item8=C:\Program Files (x86)\Borland\CBuilder6\1\Projects;E:\work\!PC_SW_DESIGNS\ETHERNET\RIP_wp;$(BCB)\include;$(BCB)\include\vcl;Include
+Item9=C:\Program Files (x86)\Borland\CBuilder6\1\Projects;E:\work\!PC_SW_DESIGNS\ETHERNET\RIP_wp;$(BCB)\include;$(BCB)\include\vcl
+
+[HistoryLists\hlLibraryPath]
+Count=11
+Item0=C:\Program Files (x86)\Borland\CBuilder6\Projects;C:\Program Files\Borland\CBuilder6\Projects;..\Diagram;C:\Program Files (x86)\Borland\CBuilder6\1\Projects;alglib;$(BCB)\Projects\Lib;$(BCB)\lib\obj;$(BCB)\lib;Lib
+Item1=C:\Program Files\Borland\CBuilder6\Projects;..\Diagram;C:\Program Files (x86)\Borland\CBuilder6\1\Projects;alglib;$(BCB)\Projects\Lib;$(BCB)\lib\obj;$(BCB)\lib;Lib
+Item2=..\Diagram;C:\Program Files (x86)\Borland\CBuilder6\1\Projects;alglib;$(BCB)\Projects\Lib;$(BCB)\lib\obj;$(BCB)\lib;Lib
+Item3=alglib;$(BCB)\Projects\Lib;$(BCB)\lib\obj;$(BCB)\lib;Lib
+Item4=alglib;$(BCB)\Projects\Lib;..\..\COM_ADC_ALL\COM_ADC_CHILD_PELENG_IMIT;C:\Windows\system32;C:\Program Files (x86)\Borland\CBuilder6\1\Projects;E:\work\!PC_SW_DESIGNS\ETHERNET\RIP_wp;$(BCB)\lib\obj;$(BCB)\lib;Lib
+Item5=$(BCB)\Projects\Lib;..\..\COM_ADC_ALL\COM_ADC_CHILD_PELENG_IMIT;C:\Windows\system32;C:\Program Files (x86)\Borland\CBuilder6\1\Projects;E:\work\!PC_SW_DESIGNS\ETHERNET\RIP_wp;$(BCB)\lib\obj;$(BCB)\lib;Lib
+Item6=..\..\COM_ADC_ALL\COM_ADC_CHILD_PELENG_IMIT;C:\Windows\system32;C:\Program Files (x86)\Borland\CBuilder6\1\Projects;E:\work\!PC_SW_DESIGNS\ETHERNET\RIP_wp;$(BCB)\lib\obj;$(BCB)\lib;Lib
+Item7=C:\Windows\system32;C:\Program Files (x86)\Borland\CBuilder6\1\Projects;E:\work\!PC_SW_DESIGNS\ETHERNET\RIP_wp;$(BCB)\lib\obj;$(BCB)\lib;Lib
+Item8=..\RIP;C:\Windows\system32;C:\Program Files (x86)\Borland\CBuilder6\1\Projects;E:\work\!PC_SW_DESIGNS\ETHERNET\RIP_wp;$(BCB)\lib\obj;$(BCB)\lib;Lib
+Item9=C:\Program Files (x86)\Borland\CBuilder6\1\Projects;E:\work\!PC_SW_DESIGNS\ETHERNET\RIP_wp;$(BCB)\lib\obj;$(BCB)\lib;Lib
+Item10=C:\Program Files (x86)\Borland\CBuilder6\1\Projects;E:\work\!PC_SW_DESIGNS\ETHERNET\RIP_wp;$(BCB)\lib\obj;$(BCB)\lib
+
+[HistoryLists\hlDebugSourcePath]
+Count=1
+Item0=$(BCB)\source\vcl
+
+[HistoryLists\hlConditionals]
+Count=1
+Item0=_DEBUG
+
+[Debugging]
+DebugSourceDirs=$(BCB)\source\vcl
+
+[Parameters]
+RunParams=
+Launcher=
+UseLauncher=0
+DebugCWD=
+HostApplication=
+RemoteHost=
+RemotePath=
+RemoteLauncher=
+RemoteCWD=
+RemoteDebug=0
+
+[Compiler]
+ShowInfoMsgs=0
+LinkDebugVcl=0
+LinkCGLIB=0
+
+[CORBA]
+AddServerUnit=1
+AddClientUnit=1
+PrecompiledHeaders=1
+
+[Language]
+ActiveLang=
+ProjectLang=
+RootDir=
+  </IDEOPTIONS>
+</PROJECT>
