@@ -22,7 +22,7 @@
 #include <ScktComp.hpp>
 #include <StdCtrls.hpp>
 
-
+#define MainbufferSizeDouble (65536*2)
 //---------------------------------------------------------------------------
 class TformMain : public TForm
 {
@@ -163,7 +163,6 @@ __published:	// IDE-managed Components
         void __fastcall ReadFile1Click(TObject *Sender);
         void __fastcall FileReadTimerTimer(TObject *Sender);
         void __fastcall FileReadTimerProc();
-        void __fastcall ScanParamChange(TObject *Sender);
         void __fastcall MeasureSettings1Click(TObject *Sender);
         void __fastcall ApplyButtonClick(TObject *Sender);
         void __fastcall IdUDPServer1UDPRead(TObject *Sender,
@@ -185,10 +184,10 @@ __published:	// IDE-managed Components
         void __fastcall btnCMD9Click(TObject *Sender);
         void __fastcall MConClick(TObject *Sender);
         void __fastcall SendSettingsClick(TObject *Sender);
+        void __fastcall leNumberOfMultOscChange(TObject *Sender);
 private:	// User declarations
    double *IndicatorXX; // данные для хранения сектора
    double *IndicatorYY; // данные для хранения сектора
-   void __fastcall MathAndPlot(int BufSize, int CurBufNum); // матобработка и вывод в растр
    void __fastcall PlotDrawParam(int type, double *DataBuf, int VarBufSize);
    void __fastcall ControlAndMeasure(int BufSize, int CurBufNum); // контроль порога и измерение координат
    int FileCounter;
@@ -211,10 +210,20 @@ public:		// User declarations
    int MinUpDownPosition;
    void __fastcall OnRecieve(unsigned &Size, char *Buffer);
    void __fastcall ProcessAnswer(short int *Buffer, unsigned int CmdNum);
+   void __fastcall MathAndPlot(int BufSize, int CurBufNum);
    void __fastcall RestartTimer(TTimer *Timer);
    void __fastcall SendData(int Size, void *Buffer);
    void __fastcall PrintPacket(unsigned Size, unsigned char *Buffer);
    void __fastcall Log(AnsiString &msg);
+   void __fastcall cleanView();
+
+   double ResXXRe[MainbufferSizeDouble], ResXXIm[MainbufferSizeDouble];
+   double ResYYRe[MainbufferSizeDouble], ResYYIm[MainbufferSizeDouble];
+   double ResXXAbs[MainbufferSizeDouble], ResXXAng[MainbufferSizeDouble];
+   double ResYYAbs[MainbufferSizeDouble], ResYYAng[MainbufferSizeDouble];
+   double ResXXPhase[MainbufferSizeDouble], ResYYPhase[MainbufferSizeDouble];
+
+
 };
    void CALLBACK TimerProc(unsigned int uID, unsigned int uMsg, DWORD dwUser, DWORD dw1, DWORD dw2);
    void CALLBACK mmPlotTimerProc(unsigned int uID, unsigned int uMsg, DWORD dwUser, DWORD dw1, DWORD dw2);

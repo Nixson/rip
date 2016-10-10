@@ -19,6 +19,9 @@ TShowThread * ShowThread;
 int SpLenMax = 1024*1024*16;
 int Td = 1;
 
+extern unsigned int WorkerCmdNum;
+extern int lePacketNumberMain;
+
 short int *CmdBuffer = NULL;
 
 unsigned int TmpCnt =0;
@@ -535,7 +538,7 @@ void __fastcall TSettingsUnitForm::SendCmdPkt(unsigned short Bytes, unsigned cha
 
         DataPtr += 12;
         memcpy(DataPtr, Buffer, Bytes);
-
+        formMain->cleanView();
         ClientSocket1->Socket->SendBuf(Pkt,PktSize);
 
         delete [] Pkt;
@@ -656,6 +659,14 @@ void __fastcall TSettingsUnitForm::ClientSocket1Read(TObject *Sender,
         RxPtrArr[RxPtrArrWrIdx].len = ClientSocket1->Socket->ReceiveLength();
         ClientSocket1->Socket->ReceiveBuf(RxPtrArr[RxPtrArrWrIdx].ptr, RxPtrArr[RxPtrArrWrIdx].len);
         RxPtrArrWrIdx = (RxPtrArrWrIdx + 1) % RxPtrArrSize;        
+}
+//---------------------------------------------------------------------------
+
+void __fastcall TSettingsUnitForm::lePacketNumberChange(TObject *Sender)
+{
+        if(lePacketNumber->Text != formMain->leNumberOfMultOsc->Text)
+                lePacketNumber->Text = formMain->leNumberOfMultOsc->Text;
+        lePacketNumberMain = lePacketNumber->Text.ToInt();
 }
 //---------------------------------------------------------------------------
 

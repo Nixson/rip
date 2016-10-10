@@ -122,6 +122,7 @@ __published:	// IDE-managed Components
           TCustomWinSocket *Socket);
         void __fastcall ClientSocket1Read(TObject *Sender,
           TCustomWinSocket *Socket);
+        void __fastcall lePacketNumberChange(TObject *Sender);
 private:	// User declarations
 public:		// User declarations
         __fastcall TSettingsUnitForm(TComponent* Owner);

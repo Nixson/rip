@@ -1,8 +1,14 @@
-*.~*
-*.exe
+*.o
 *.obj
+*.~*
+*.tds
+*.exe
+*.ddp
 *.ilc
 *.ild
 *.ilf
 *.ils
-
+*.bat
+*.dsk
+/DATA/ini/*.ini
+/DATA/pr/*.dat

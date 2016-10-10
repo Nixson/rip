@@ -1,8 +1,8 @@
 object formMeasureSettings: TformMeasureSettings
   Left = 263
   Top = 157
-  Width = 313
-  Height = 243
+  Width = 323
+  Height = 250
   Caption = #1053#1072#1089#1090#1088#1086#1081#1082#1072' '#1080#1079#1084#1077#1088#1077#1085#1080#1081
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET

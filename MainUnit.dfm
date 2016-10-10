@@ -1,6 +1,6 @@
 object formMain: TformMain
-  Left = 109
-  Top = 14
+  Left = 245
+  Top = 13
   Width = 703
   Height = 724
   Caption = 'formMain'
@@ -146,7 +146,7 @@ object formMain: TformMain
         LabelSpacing = 3
         TabOrder = 0
         Text = '900'
-        OnChange = ScanParamChange
+        OnChange = leNumberOfMultOscChange
       end
       object leMulOscDelay: TLabeledEdit
         Left = 8
@@ -160,7 +160,6 @@ object formMain: TformMain
         LabelSpacing = 3
         TabOrder = 1
         Text = '100'
-        OnChange = ScanParamChange
       end
       object leRasterPeriod: TLabeledEdit
         Left = 8
@@ -223,7 +222,6 @@ object formMain: TformMain
         LabelSpacing = 3
         TabOrder = 4
         Text = '90'
-        OnChange = ScanParamChange
       end
       object btnCMD9: TButton
         Left = 8

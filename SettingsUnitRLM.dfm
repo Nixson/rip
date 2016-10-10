@@ -282,6 +282,7 @@ object SettingsUnitForm: TSettingsUnitForm
           LabelSpacing = 3
           TabOrder = 3
           Text = '1'
+          OnChange = lePacketNumberChange
         end
         object leAdcWriteDelay: TLabeledEdit
           Left = 8

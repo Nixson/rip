@@ -28,6 +28,7 @@
 #include "ScatterUnit.h"
 #include "formChanels.h"
 #include "SettingsUnitRLM.h"
+#include "Worker.h"
 
 //---------------------------------------------------------------------------
 #pragma package(smart_init)
@@ -43,23 +44,28 @@ TformDraw *formSpDraw;
 TformDraw *formExpDraw;
 TformRaster *formRasterDrawXX;
 TformRaster *formRasterDrawYY;
+TWorker * Worker;
+
+int MainPosition = 0;
+int WorkerPosition = 0;
+int WorkerBufSize = 0;
+int PlotPosition = 0;
+unsigned int WorkerCmdNum = 0;
+short int *WorkerBuffer;
+int lePacketNumberMain = 0;
 
 AnsiString Path = ExtractFilePath(Application->ExeName);
 
 const unsigned int N = 65536*2;
-short int PlotBuf[N];
-double DataBuf[N];
+double *DataBuf;
 double OriginalPulse[N];
 comp OriginalPulseComp[N];
 double OriginalPulseRe[N];
 double OriginalPulseIm[N];
-double a0XXsv0[N], a1XXsv0[N], a0YYsv0[N], a1YYsv0[N];
-double a0XXsv1[N], a1XXsv1[N], a0YYsv1[N], a1YYsv1[N];
-double ResXXRe[N], ResXXIm[N];
-double ResYYRe[N], ResYYIm[N];
-double ResXXAbs[N], ResXXAng[N];
-double ResYYAbs[N], ResYYAng[N];
-double ResXXPhase[N], ResYYPhase[N];
+double *MainResXXRe, *MainResXXIm, *MainResYYRe, *MainResYYIm;
+double *MainResXXAbs, *MainResXXAng, *MainResYYAbs, *MainResYYAng;
+double *MainResXXPhase, *MainResYYPhase;
+
 double ResXXReAvg[N], ResXXImAvg[N];
 double ResYYReAvg[N], ResYYImAvg[N];
 double *CorrPtr;
@@ -122,102 +128,8 @@ void __fastcall RasterClean()
 				 formRasterDrawYY->Table->Data[i][j] = 0;
 }
 //---------------------------------------------------------------------------
-void __fastcall MyCorrelation(double* in, int dataSize, double* kernel, int kernelSize, double* out)
-{
-		int i, j, k;
 
-		// check validity of params
-		if(!in || !out || !kernel) return;
-		if(dataSize <=0 || kernelSize <= 0) return;
 
-		// start convolution from out[kernelSize-1] to out[dataSize-1] (last)
-		for(i = kernelSize-1; i < dataSize; ++i)
-		{
-				out[i] = 0;                             // init to 0 before accumulate
-
-				for(j = i, k = 0; k < kernelSize; --j, ++k)
-						out[i] += in[j] * kernel[k];
-		}
-
-		// convolution from out[0] to out[kernelSize-2]
-		for(i = 0; i < kernelSize - 1; ++i)
-		{
-				out[i] = 0;                             // init to 0 before sum
-
-				for(j = i, k = 0; j >= 0; --j, ++k)
-						out[i] += in[j] * kernel[k];
-		}
-
-		return;
-};
-//---------------------------------------------------------------------------
-void __fastcall Math1(unsigned int BufSize, double *DataBuf)
-{
-	 double *a0XX, *a1XX, *a0YY, *a1YY;
-/*
-	 unsigned int Size = BufSize/sizeof(int);
-	 a0XX = DataBuf+1024*0;
-	 a1XX = DataBuf+1024*1;
-	 a0YY = DataBuf+1024*2;
-	 a1YY = DataBuf+1024*3;
-*/
-	 unsigned int Size = BufSize/4;
-
-	 a0XX = DataBuf+Size*0;
-	 a1XX = DataBuf+Size*1;
-	 a0YY = DataBuf+Size*2;
-	 a1YY = DataBuf+Size*3;
-
-	 MyCorrelation(a0XX, Size, OriginalPulseRe, Size, a0XXsv0);
-	 MyCorrelation(a0XX, Size, OriginalPulseIm, Size, a0XXsv1);
-	 MyCorrelation(a1XX, Size, OriginalPulseRe, Size, a1XXsv0);
-	 MyCorrelation(a1XX, Size, OriginalPulseIm, Size, a1XXsv1);
-	 MyCorrelation(a0YY, Size, OriginalPulseRe, Size, a0YYsv0);
-	 MyCorrelation(a0YY, Size, OriginalPulseIm, Size, a0YYsv1);
-	 MyCorrelation(a1YY, Size, OriginalPulseRe, Size, a1YYsv0);
-	 MyCorrelation(a1YY, Size, OriginalPulseIm, Size, a1YYsv1);
-
-	 for(unsigned int i=0; i<Size; ++i)
-	 {
-			// произведение сигналов с двух антенн в режиме ХХ с комплексным сопряжением
-                        // Изменил знаки, как в YY, стало лучше, но сдвиг углов между гор. и верт. поляризац. около 3 град.
-			ResXXRe[i] = (a0XXsv0[i]*a1XXsv0[i] + a0XXsv1[i]*a1XXsv1[i])/1152/8;//*cos(M_PI/2);
-
-                        // 	ResXXRe[i] = -(a0XXsv0[i]*a1XXsv0[i] + a0XXsv1[i]*a1XXsv1[i])/1152/8;//*cos(M_PI/2);
-			// изменён порядок вычисления нумерации антенн 2015.01.31
-			ResXXIm[i] = (a0XXsv0[i]*a1XXsv1[i] - a0XXsv1[i]*a1XXsv0[i])/1152/8;//*sin(M_PI/2);
-                       // - заменил на +
-                       // ResXXIm[i] = (-a0XXsv0[i]*a1XXsv1[i] - a0XXsv1[i]*a1XXsv0[i])/1152/8;//*sin(M_PI/2);
-			// вычисление фазы сигнала с антенны 0 в режиме ХХ
-			if((a0XXsv1[i] != 0) && (a0XXsv0[i] != 0))
-
-				 ResXXPhase[i] = 180*(atan2(a0XXsv1[i], a0XXsv0[i])+M_PI)/M_PI;
-                                 //Убрал из   ResXXPhase[i]    +M_PI для устранения фазового сдвига между каналами - не помогло
-                                // ResXXPhase[i] = 180*(atan2(a0XXsv1[i], a0XXsv0[i]))/M_PI;
-
-			if((a0YYsv1[i] != 0) && (a0YYsv0[i] != 0))
-				 ResYYPhase[i] = 180*(atan2(a0YYsv1[i], a0YYsv0[i])+M_PI)/M_PI;
-
-			// вычисление модуля и аргумента произведения сигналов в режиме ХХ
-			ResXXAbs[i] = pow(ResXXRe[i]*ResXXRe[i] + ResXXIm[i]*ResXXIm[i], 0.5);
-			if(ResXXAbs[i] >=1e-13) ResXXAng[i] = RAD*(atan2(ResXXIm[i], ResXXRe[i]));
-			else ResXXAng[i] = 0; // аргумент от -180 до 180 градусов
-
-			// произведение сигналов с двух антенн в режиме YY с комплексным сопряжением
-			// изменён порядок вычисления нумерации антенн 2015.01.31
-			// !!!!! УБРАНА ИНВЕРСИЯ ПРОИЗВЕДЕНИЯ СИГНАЛОВ АНТЕНН ДЛЯ УСТРАНЕНИЯ СИСТЕМАТИЧЕСКОЙ
-			// ПОГРЕШНОСТИ РАЗНОСТИ ФАЗ В 180 ГРАДУСОВ
-			ResYYRe[i] = (a0YYsv0[i]*a1YYsv0[i] + a0YYsv1[i]*a1YYsv1[i])/1152/8;
-			ResYYIm[i] = (a0YYsv0[i]*a1YYsv1[i] - a0YYsv1[i]*a1YYsv0[i])/1152/8;
-
-			// вычисление модуля и аргумента произведения сигналов в режиме YY
-			ResYYAbs[i] = pow(ResYYRe[i]*ResYYRe[i] + ResYYIm[i]*ResYYIm[i], 0.5);
-			if(ResYYAbs[i] >= 1e-13) ResYYAng[i] = RAD*(atan2(ResYYIm[i], ResYYRe[i]));
-			else ResYYAng[i] = 0;
-
-	 }
-//   formExpDraw->DrawOscCoherentAccum(ResXXAbs, Size);
-}
 //---------------------------------------------------------------------------
 void __fastcall AlgLib_Convolution(double *ain, int aSize, double *bin, int bSize, double *res)
 {
@@ -243,7 +155,7 @@ __fastcall TformMain::TformMain(TComponent* Owner)
 	 //CopyMAC_SRC(); // скопировать MAC из Hardware
 	 //Hardware->SetFilter("arp or udp dst port 30583"); // capture фильтр
 	 //if(ini) delete ini;
-
+         DataBuf = new double[N];
 	 DecimalSeparator = '.';
 	 CoordFileName = ExtractFileDir(Application->ExeName) + "\\CoordFile.bin";
 
@@ -260,8 +172,43 @@ __fastcall TformMain::TformMain(TComponent* Owner)
 	 int size = 1024*leNumberOfMultOsc->Text.ToInt();
 	 IndicatorXX = new double[size];
 	 IndicatorYY = new double[size];
+         Worker = new TWorker(false);
 
 }
+void __fastcall TformMain::cleanView(){
+        MainPosition = 0;
+        WorkerPosition = 0;
+        PlotPosition = 0;
+        int lePacketNumberLocal = SettingsUnitForm->lePacketNumber->Text.ToInt();
+        if(lePacketNumberLocal > lePacketNumberMain)
+                lePacketNumberMain = lePacketNumberLocal;
+        if(WorkerBuffer) delete [] WorkerBuffer;
+        WorkerBuffer = new short int [lePacketNumberMain*1030];
+
+        if(MainResXXRe) delete [] MainResXXRe;
+        if(MainResXXIm) delete [] MainResXXIm;
+        if(MainResYYRe) delete [] MainResYYRe;
+        if(MainResYYIm) delete [] MainResYYIm;
+        MainResXXRe = new double [lePacketNumberMain*1024];
+        MainResXXIm = new double [lePacketNumberMain*1024];
+        MainResYYRe = new double [lePacketNumberMain*1024];
+        MainResYYIm = new double [lePacketNumberMain*1024];
+
+        if(MainResXXAbs) delete [] MainResXXAbs;
+        if(MainResXXAng) delete [] MainResXXAng;
+        if(MainResYYAbs) delete [] MainResYYAbs;
+        if(MainResYYAng) delete [] MainResYYAng;
+        if(MainResXXPhase) delete [] MainResXXPhase;
+        if(MainResYYPhase) delete [] MainResYYPhase;
+        MainResXXAbs = new double [lePacketNumberMain*1024];
+        MainResXXAng = new double [lePacketNumberMain*1024];
+        MainResYYAbs = new double [lePacketNumberMain*1024];
+        MainResYYAng = new double [lePacketNumberMain*1024];
+        MainResXXPhase = new double [lePacketNumberMain*1024];
+        MainResYYPhase = new double [lePacketNumberMain*1024];
+
+}
+
 void CALLBACK mmTimerPulseClick(unsigned int uID, unsigned int uMsg, DWORD dwUser, DWORD dw1, DWORD dw2){
         
 }
@@ -272,6 +219,92 @@ void CALLBACK mmPlotTimerProc(unsigned int uID, unsigned int uMsg, DWORD dwUser,
 				catch (Exception &exception) {
 								ShowMessage("Ошибка в Таймере!");
 				}
+}
+
+void __fastcall TformMain::MathAndPlot(int BufSize, int CurBufNum)
+{
+		// корреляционная обработка перекрёстных поляризаций
+		//Math1(BufSize, DataBuf);
+		// добавление данных в память для измерения кординат, только 1024 выборки из ответа
+		if(IndicatorXX) memcpy(&IndicatorXX[1024*CurBufNum], ResXXAbs, 1024*sizeof(double));
+		if(IndicatorYY) memcpy(&IndicatorYY[1024*CurBufNum], ResYYAbs, 1024*sizeof(double));
+		// счётчик накоплений для АФ режима
+		/*else */RasterCounter++;
+		if(RasterCounter >= (unsigned)(leRasterPeriod->Text.ToIntDef(10)))
+			RasterCounter = 0;
+
+		int offset, length;
+		if(rbRasterAF->Checked) // вывод на индикатор в режиме "АФ"
+		{
+			 if(RasterCounter == 0) RasterClean();
+			 PlotDrawParam(3,ResXXAbs,BufSize/4);
+			 //!!formExpDraw->DrawOscCoherentAccum(ResXXAbs, BufSize/4);
+
+			 // заполнение растра поляризации ХХ
+			 offset = formRasterSettings->UpDownX1->Position;
+			 length = formRasterDrawXX->Table->Row; // длина выборки
+			 if(BufSize/4 < (length+offset)) length = (BufSize/4-offset); // проверка выхода за пределы отклика
+			 double value = atan2(0, -10);
+			 int index;
+			 for(int i=0; i<length; i++)
+			 {
+					// !!! значения аргумента в диапазоне от -180 до 180
+					index = round(ResXXAng[i+offset]+180); // округдение аргумента для определения индекса ячейки
+					// приведение фазы к диапазону от 0 до 360
+					while(index >= formRasterDrawXX->Table->Col) index -= formRasterDrawXX->Table->Col;
+					while(index < 0) index += formRasterDrawXX->Table->Col;
+					// накопление значений
+					value = formRasterDrawXX->Table->Data[i][index];
+					formRasterDrawXX->Table->Data[i][index] = (value+ResXXAbs[i+offset]);
+			 }
+			 //!!formRasterDrawXX->Raster1->Plot();
+
+			 offset = formRasterSettings->UpDownY1->Position;
+			 length = formRasterDrawYY->Table->Row; // длина выборки
+			 if(BufSize/4 < (length+offset)) length = (BufSize/4-offset); // проверка выхода за пределы отклика
+			 for(int i=0; i<length; i++)
+			 {
+					// !!! значения аргумента в диапазоне от -180 до 180
+					index = round(ResYYAng[i+offset]+180); // округдение аргумента для определения индекса ячейки
+					// приведение фазы к диапазону от 0 до 360
+					while(index >= formRasterDrawYY->Table->Col) index -= formRasterDrawYY->Table->Col;
+					while(index < 0) index += formRasterDrawYY->Table->Col;
+					// накопление значений
+					value = formRasterDrawYY->Table->Data[i][index];
+					formRasterDrawYY->Table->Data[i][index] = (value+ResYYAbs[i+offset]);
+			 }
+			 //!!formRasterDrawYY->Raster1->Plot();
+		}
+		else // вывод амплитудного или фазового растра в секторе
+		{
+
+			 if(rbRasterA->Checked) PlotDrawParam(3,ResXXAbs,BufSize/4);
+			 else  PlotDrawParam(3,ResXXAng,BufSize/4);
+				//!!if(rbRasterA->Checked) formExpDraw->DrawOscCoherentAccum(ResXXAbs, BufSize/4); // амплитудный эксперимент
+				//!!else formExpDraw->DrawOscCoherentAccum(ResXXAng, BufSize/4); // фазовый эксперимент
+
+				// добавление в растр поляризации ХХ
+				offset = formRasterSettings->UpDownX1->Position; // отступ от нуля реализации
+				length = formRasterDrawXX->Table->Row; // длина выборки
+				if(BufSize/4 < (length+offset)) length = (BufSize/4-offset); // проверка выхода за пределы отклика
+				for(int i=0; i<length; i++)
+				{
+					if(rbRasterA->Checked) formRasterDrawXX->Table->Data[i][CurBufNum] = (ResXXAbs[i+offset]); //амплитуда
+					else formRasterDrawXX->Table->Data[i][CurBufNum] = (ResXXPhase[i+offset]); // фаза
+				}
+				// добавление в растр поляризации YY
+				offset = formRasterSettings->UpDownY1->Position; // отступ от нуля реализации
+				length = formRasterDrawYY->Table->Row; // длина выборки
+				if(BufSize/4 < (length+offset)) length = (BufSize/4-offset); // проверка выхода за пределы отклика
+				for(int i=0; i<length; i++)
+				{
+					if(rbRasterA->Checked) formRasterDrawYY->Table->Data[i][CurBufNum] = (ResYYAbs[i+offset]); //амплитуда
+					else formRasterDrawYY->Table->Data[i][CurBufNum] = (ResYYPhase[i+offset]); // фаза
+				}
+				// обновление растров
+				//!!formRasterDrawXX->Raster1->Plot();
+				//!!formRasterDrawYY->Raster1->Plot();
+		}
 }
 //---------------------------------------------------------------------------
 __fastcall TformMain::~TformMain()
@@ -497,737 +530,14 @@ void __fastcall TformMain::Button2Click(TObject *Sender)
 //---------------------------------------------------------------------------
 unsigned int test = 0;
 // функция обработки ответов от РЛС получает указатель на буфер данных и номер команды
-void __fastcall TformMain::ProcessAnswer(short int *Buffer, unsigned int CmdNum)
-{
 
-	 short int *DataPtr = Buffer;
-
-	 switch(CmdNum)
-	 {
-			case 0x1111:
-			{
-				 formMain->sbMainStatusBar->Panels->Items[2]->Text = "Соединение установлено";
-			}break;
-
-			case 0x0002:
-			case 0x0003: // 1 импульс на экран
-			{
-//         unsigned int CurBufNum = *((unsigned int *) DataPtr);
-				 DataPtr+=2;
-				 unsigned int CurSubBufNum = *((unsigned int *) DataPtr);
-				 DataPtr+=2;
-
-				 unsigned int BufSize = 1024;
-
-				 /*for(unsigned int i=0; i<1024; i++)
-				 {
-						PlotBuf[1024*CurSubBufNum+i] = *(DataPtr+i);
-				 }*/
-                                 memcpy(&PlotBuf[1024*CurSubBufNum],DataPtr,1024*2);
-				 
-				 if(!formOscDraw) return;
-				 if(!formSpDraw) return;
-
-				 if((CurSubBufNum+1) == (unsigned)formSettings->leSubBufNum->Text.ToInt())
-				 {
-						{
-							 for(unsigned int i=0;i<BufSize;i++) DataBuf[i] = PlotBuf[i];
-
-							 //formOscDraw->Chart->LeftAxis->Automatic = false;
-							 //formOscDraw->Chart->LeftAxis->SetMinMax(0, 255);
-								PlotDrawParam(1,DataBuf,BufSize);
-								PlotDrawParam(2,DataBuf,BufSize);
-
-							 //!!formOscDraw->DrawOsc(DataBuf, BufSize);
-							 //!!formSpDraw->DrawSp(DataBuf, BufSize);
-						}
-				 }
-			}break;
-
-			case 0x0006: // 32 импульса избранные на экран
-			{
-				 // непрерывный режим без усреднения
-				 int CurBufNum = *((unsigned int *)DataPtr);
-				 DataPtr+=2;
-				 unsigned int CurVarNumL = *((unsigned int *)DataPtr);
-				 DataPtr+=2;
-				 int CurSubBufNum = *((unsigned int *)DataPtr);
-				 DataPtr+=2;
-
-				 unsigned int BufSize = 1024;
-				 unsigned int VarBufSize = BufSize*4;
-
-                                 bool summChanels = false;
-                                 unsigned int CurVarNum = 33;
-                                 if(CurVarNumL==0){
-                                        memset(PlotBuf,0,VarBufSize*sizeof(int));
-                                 }
-                                 
-                                 if(CurVarNumL==Fchanels->cvn0){
-                                        CurVarNum = 0;
-                                 }
-                                 else if(CurVarNumL==Fchanels->cvn1){
-                                        CurVarNum = 2;
-                                 }
-                                 else if(CurVarNumL==Fchanels->cvn2){
-                                        CurVarNum = 1;
-                                 }
-                                 else if(CurVarNumL==Fchanels->cvn3){
-                                        CurVarNum = 3;
-                                 }
-                                 else if(CurVarNumL==Fchanels->cvs0){
-                                        CurVarNum = 0;
-                                        summChanels = true;
-                                 }
-                                 else if(CurVarNumL==Fchanels->cvs1){
-                                        CurVarNum = 2;
-                                        summChanels = true;
-                                 }
-                                 else if(CurVarNumL==Fchanels->cvs2){
-                                        CurVarNum = 1;
-                                        summChanels = true;
-                                 }
-                                 else if(CurVarNumL==Fchanels->cvs3){
-                                        CurVarNum = 3;
-                                        summChanels = true;
-                                 }
-                                 else
-                                        CurVarNum = 33;
-                                 if(CurVarNum < 32){
-                                        unsigned int position = CurVarNum*BufSize;
-                                        unsigned int i = 0;
-                                        for(i=0; i < 1024; ++i){
-                                                PlotBuf[position+i] += *(DataPtr+i);
-                                        }
-                                 }
-                                 if(summChanels)
-                                        CurVarNum = 33;
-                                 if(CurVarNum > 31)
-                                        return;
-				/* switch(CurVarNum) // фильтр нужных импульсов
-				 {
-						case 0 : CurVarNum = 0; break;
-						case 16: CurVarNum = 1; break;
-						case 15: CurVarNum = 2; break;
-						case 31: CurVarNum = 3; break;
-//            case 32: CurVarNum = 3; break;
-						default: CurVarNum = 33; // добавлено Герасимов
-//            break;
-				 }*/
-				 // перенос данных в промежуточный буфер
-				 //memcpy(&PlotBuf[CurVarNum*BufSize+1024*CurSubBufNum], DataPtr, 1024);
-/*
-				 for(unsigned int i=0;i<1024;i++)
-				 {
-						PlotBuf[CurBufNum*VarBufSize+CurVarNum*BufSize+1024*CurSubBufNum+i] = *(DataPtr+i);
-				 }
-				 if(!formOscDraw) return;
-				 if(!formSpDraw) return;
-				 if((CurSubBufNum+1)*(CurVarNum+1) == formSettings->leSubBufNum->Text.ToInt()*32)
-*/
-				 // если закончена текущая пачка вариантов поляризации
-				 if( CurVarNumL>=31 )
-				 {
-						sbMainStatusBar->Panels->Items[0]->Text = "Пачка "+IntToStr(CurBufNum);
-						 // преобразование типа данных осциллограммы
-                                                for(unsigned int i=0; i < 1024*4; ++i) DataBuf[i] = PlotBuf[i];
-						 //formOscDraw->Chart->LeftAxis->Automatic = false;
-						 //formOscDraw->Chart->LeftAxis->SetMinMax(0, 255);
-						 // отображение данных на осциллограмме и спектрограмме
-						if(formOscDraw)
-						{
-							if(formOscDraw->WindowState != wsMinimized){
-								PlotDrawParam(1,DataBuf,VarBufSize/sizeof(int));
-								//!!formOscDraw->DrawOsc(DataBuf, VarBufSize/sizeof(int));
-							}
-						}
-						if(formSpDraw)
-						{
-							if(formSpDraw->WindowState != wsMinimized){
-								PlotDrawParam(2,DataBuf,VarBufSize/sizeof(int));
-								//!!formSpDraw->DrawSp(DataBuf, VarBufSize/sizeof(int));
-							}
-						}
-
-						// математическая обработка и отображение на индикатор
-						MathAndPlot(VarBufSize, CurBufNum);
-						// контроль порога в окне и измерение координат
-						// вызов строго после MathAndPlot
-						ControlAndMeasure(BufSize, CurBufNum);
-				 }
-			}break;
-
-			case 0x0004: // 32 импульса на экран
-			{
-				 unsigned int CurBufNum = *((unsigned int *) DataPtr);
-				 DataPtr += sizeof(int);
-				 unsigned int CurVarNum = *((unsigned int *) DataPtr);
-				 DataPtr += sizeof(int);
-				 unsigned int CurSubBufNum = *((unsigned int *) DataPtr);
-				 DataPtr += sizeof(int);
-
-				 unsigned int BufSize = formSettings->leSubBufNum->Text.ToInt()*1024;
-				 unsigned int VarBufSize = BufSize*32;
-
-				 for(unsigned int i=0;i<1024;i++)
-				 {
-						PlotBuf[CurBufNum*VarBufSize+CurVarNum*BufSize+1024*CurSubBufNum+i] = *(DataPtr+i);
-				 }
-
-				 if(!formOscDraw || formOscDraw->WindowState == wsMinimized) return;
-				 if(!formSpDraw || formSpDraw->WindowState == wsMinimized) return;
-
-				 if((CurSubBufNum+1)*(CurVarNum+1) == (unsigned)(formSettings->leSubBufNum->Text.ToInt()*32))
-				 {
-						{
-							 for(unsigned int i=0; i<VarBufSize;i++) DataBuf[i] = PlotBuf[i];
-
-							 //formOscDraw->Chart->LeftAxis->Automatic = false;
-							 //formOscDraw->Chart->LeftAxis->SetMinMax(0, 255);
-								PlotDrawParam(1,DataBuf,VarBufSize);
-								PlotDrawParam(2,DataBuf,VarBufSize);
-
-							 //!!formOscDraw->DrawOsc(DataBuf, VarBufSize);
-							 //!!formSpDraw->DrawSp(DataBuf, VarBufSize);
-						}
-				 }
-			}break;
-
-			case 0x0005: // много импульсов в файл
-			{
-				 if(!PulseResponseMemory) return;
-
-				 unsigned int MaxSubBufNum = formSettings->leSubBufNum->Text.ToInt();
-				 unsigned int CurBufNum = *((unsigned int *) DataPtr);
-				 DataPtr += sizeof(int);
-				 unsigned int CurVarNum = *((unsigned int *) DataPtr);
-				 DataPtr += sizeof(int);
-				 unsigned int CurSubBufNum = *((unsigned int *) DataPtr);
-				 DataPtr += sizeof(int);
-				 unsigned int CurPacketNum = CurSubBufNum + CurVarNum*MaxSubBufNum + CurBufNum*MaxSubBufNum*32;
-
-				 unsigned int BufSize = MaxSubBufNum*1024;
-				 unsigned int VarBufSize = BufSize*32;
-				 unsigned int CurBytePos = CurBufNum*VarBufSize+CurVarNum*BufSize+CurSubBufNum*1024;
-
-				 PulseResponseMemory->Position = (__int64) (CurBytePos);
-				 PulseResponseMemory->Write(DataPtr, 1024);
-
-				 if((FrameCnt%1024) == 0) formProgress->Label3->Caption = "Принято "+IntToStr(FrameCnt)+" пакетов";
-
-				 if(FrameCnt != CurPacketNum) // если потерялся пакет
-				 {
-						/*if(Memo->Visible)
-							 Memo->Lines->Add(IntToStr(FrameCnt) + "  " + IntToStr(CurPacketNum));*/
-						LostPacketCnt += CurPacketNum-FrameCnt;
-						formProgress->Label2->Caption = "Потеряно "+IntToStr(LostPacketCnt)+" пакетов";
-
-						FrameCnt = CurPacketNum;
-						PulseResponseMemory->Position = (__int64) ((CurBytePos>1024)?CurBytePos-1024:0);
-						PulseResponseMemory->Write(Null, 1024);
-				 }
-				 FrameCnt++;
-
-				 if((CurSubBufNum+1)*(CurVarNum+1)*(CurBufNum+1) == (unsigned)(leNumberOfMultOsc->Text.ToInt()*MaxSubBufNum*32))  // == FrameCnt
-				 {
-                        if(ScatterForm)
-                        {
-                            leExpName->Text = "Y"+FormatFloat("00", ScatterForm->posY - ScatterForm->PosY)+
-                                              "X"+FormatFloat("000", ScatterForm->posX - ScatterForm->PosX);
-                        }
-						AnsiString Time = FormatDateTime("yyyy.mm.dd_hh.mm.ss", Now());
-						AnsiString PulseResponseName = "DATA\\pr\\"+leExpName->Text+"_"+Time+".dat";
-						AnsiString IniName = "DATA\\ini\\"+leExpName->Text+"_"+Time+".ini";
-						PulseResponseMemory->SaveToFile(Path+PulseResponseName);
-						formSettings->SaveConfig(IniName);
-						if(PulseResponseMemory) {delete PulseResponseMemory; PulseResponseMemory = NULL;}
-
-						formProgress->Visible = false;
-						formProgress->Close();
-
-                        if(ScatterForm)
-                        {
-                            ScatterForm->UpdatePosition(); // перестроить угол повотора
-                        }
-                        else
-                        {
-                            sbMainStatusBar->Panels->Items[2]->Text = "Файл записан!";
-						    ShowMessage("Файл записан!");
-                        }
-
-				 }
-			}break;
-
-			case 0x0008:
-			case 0x000A: // 1 импульс с усреднением на экран
-			{
-				 unsigned int CurBufNum = *((unsigned int *) DataPtr);
-				 DataPtr += sizeof(int);
-				 unsigned int CurSubBufNum = *((unsigned int *) DataPtr);
-				 DataPtr += sizeof(int);
-
-				 unsigned int BufSize = formSettings->leSubBufNum->Text.ToInt()*1024*sizeof(int);
-
-				 for(unsigned int i=0;i<1024;i++)
-				 {
-						PlotBuf[1024*CurSubBufNum+i] = *(DataPtr+i);
-				 }
-
-				 if((CurSubBufNum+1) == (unsigned)(formSettings->leSubBufNum->Text.ToInt()*sizeof(int)))
-				 {
-						if((CurBufNum%30) == 0)
-							 for(unsigned int i=0; i<BufSize/sizeof(int); i++) RefDataBuf[i] = (*(unsigned int *)(PlotBuf+i*sizeof(int)) / formSettings->leBurstLen->Text.ToInt());
-
-						for(unsigned int i=0; i<BufSize/sizeof(int); i++)
-							 DataBuf[i] = (*(unsigned int *)(PlotBuf+i*sizeof(int)) / formSettings->leBurstLen->Text.ToInt());
-
-						if(!formOscDraw) return;
-						if(!formSpDraw) return;
-
-						//formOscDraw->Chart->LeftAxis->Automatic = false;
-						//formOscDraw->Chart->LeftAxis->SetMinMax(0, 255);
-						PlotDrawParam(1,DataBuf,BufSize/sizeof(int));
-						PlotDrawParam(2,DataBuf,BufSize/sizeof(int));
-
-
-						//!!formOscDraw->DrawOsc(DataBuf, BufSize/sizeof(int));
-						//!!formSpDraw->DrawSp(DataBuf, BufSize/sizeof(int));
-				 }
-			}break;
-
-			case 0x0007: // 32 импульса усредненные избранные на экран
-			{
-				 // определение счётчиков принятых данных
-				 unsigned int CurBufNum = *((unsigned int *) DataPtr);
-				 DataPtr += sizeof(int);
-				 unsigned int CurVarNumL = *((unsigned int *) DataPtr);
-				 DataPtr += sizeof(int);
-				 unsigned int CurSubBufNum = *((unsigned int *) DataPtr);
-				 DataPtr += sizeof(int);
-
-                                 unsigned int CurVarNum = 0;
-
-
-
-                                 if(chWriteView->Checked && PulseResponseMemory){
-                                        unsigned int MaxSubBufNum = formSettings->leSubBufNum->Text.ToInt();
-				        unsigned int BufSize = MaxSubBufNum*1024;
-				        unsigned int VarBufSize = BufSize*32;
-				        unsigned int CurBytePos = CurBufNum*VarBufSize+CurVarNum*BufSize+CurSubBufNum*1024;
-
-				        PulseResponseMemory->Position = (__int64) (CurBytePos);
-				        PulseResponseMemory->Write(DataPtr, 1024);
-                                        if((CurSubBufNum+1)*(CurVarNum+1)*(CurBufNum+1) == (unsigned)(leNumberOfMultOsc->Text.ToInt()*MaxSubBufNum*32)){
-						AnsiString Time = FormatDateTime("yyyy.mm.dd_hh.mm.ss", Now());
-						AnsiString PulseResponseName = "DATA\\pr\\"+leExpName->Text+"_"+Time+".dat";
-						AnsiString IniName = "DATA\\ini\\"+leExpName->Text+"_"+Time+".ini";
-						PulseResponseMemory->SaveToFile(Path+PulseResponseName);
-						formSettings->SaveConfig(IniName);
-						if(PulseResponseMemory) {delete PulseResponseMemory; PulseResponseMemory = NULL;}
-
-                                        }
-                                 }
-
-				 unsigned int BufSize = formSettings->leSubBufNum->Text.ToInt()*1024*sizeof(int);
-				 unsigned int VarBufSize = BufSize*4;
-                                 if(CurVarNumL==0){
-                                        memset(&PlotBuf[1024*CurSubBufNum],0,BufSize*sizeof(int));
-                                 }
-
-                                 bool summChanels = false;
-                                 if(CurVarNumL==Fchanels->cvn0)
-                                        CurVarNum = 0;
-                                 else if(CurVarNumL==Fchanels->cvn1)
-                                        CurVarNum = 2;
-                                 else if(CurVarNumL==Fchanels->cvn2)
-                                        CurVarNum = 1;
-                                 else if(CurVarNumL==Fchanels->cvn3)
-                                        CurVarNum = 3;
-                                 else if(CurVarNumL==Fchanels->cvs0){
-                                        CurVarNum = 0;
-                                        summChanels = true;
-                                 }
-                                 else if(CurVarNumL==Fchanels->cvs1){
-                                        CurVarNum = 2;
-                                        summChanels = true;
-                                 }
-                                 else if(CurVarNumL==Fchanels->cvs2){
-                                        CurVarNum = 1;
-                                        summChanels = true;
-                                 }
-                                 else if(CurVarNumL==Fchanels->cvs3){
-                                        CurVarNum = 3;
-                                        summChanels = true;
-                                 }
-                                 else
-                                        CurVarNum = 33;
-
-				 /*switch(CurVarNum) // фильтр нужных импульсов
-				 {
-						case 0 : CurVarNum = 0; break;
-						case 16: CurVarNum = 1; break;
-						case 15: CurVarNum = 2; break;
-						case 31: CurVarNum = 3; break;
-						default: CurVarNum = 33; break;
-				 }*/
-				 // перенос принятых данных в промежуточный буфер пачки
-
-
-                                 if(CurVarNum < 32){
-                                        unsigned int position = CurVarNum*BufSize+1024*CurSubBufNum;
-                                        for(unsigned int i=0; i < 1024; ++i){
-                                                PlotBuf[position+i] += *(DataPtr+i);
-                                        }
-                                 }
-                                 if(summChanels)
-                                        CurVarNum = 33;
-                                 if(CurVarNum > 31)
-                                        return;
-				 sbMainStatusBar->Panels->Items[0]->Text = IntToStr(CurBufNum)+ " " +IntToStr(CurVarNum)+ " " +IntToStr(CurSubBufNum);
-
-				 //memcpy(&PlotBuf[CurVarNum*BufSize+1024*CurSubBufNum], DataPtr, 1024);
-/*
-				 for(unsigned int i=0; i<1024; i++)
-				 {
-						PlotBuf[CurVarNum*BufSize+1024*CurSubBufNum+i] = *(DataPtr+i);//0*VarBufSize+
-				 }
-				 if(!formOscDraw) return;
-				 if(!formSpDraw) return;
-*/
-                                 //if(Memo->Visible) Memo->Lines->Add(IntToStr((CurSubBufNum+1)*(CurVarNum+1)*(CurBufNum+1)));
-                                 if((CurSubBufNum+1)*(CurVarNum+1)*(CurBufNum+1) == (unsigned)(leNumberOfMultOsc->Text.ToInt()*formSettings->leSubBufNum->Text.ToInt()*32)){
-                                        //if(Memo->Visible) Memo->Lines->Add("CheckedSS");
-                                        if(AutoCheckBox->Checked) {
-                                              /*  AnsiString Logmsg = "Checked";
-                                              Log(Logmsg);*/
-                                        }
-                                 }
-                                 if( (CurBufNum+1) >= (unsigned)leNumberOfMultOsc->Text.ToInt() && CurVarNum == 3 && CurSubBufNum == 3 ){
-                                        if(AutoCheckBox->Checked) {
-                                                //bContView32AvgClick(this);
-                                        }
-                                 }
-				 if((CurSubBufNum+1)*(CurVarNum+1) == (unsigned)(formSettings->leSubBufNum->Text.ToInt()*4*sizeof(int)))
-				 {
-						//sbMainStatusBar->Panels->Items[2]->Text = IntToStr(CurBufNum);
-						//sbMainStatusBar->Panels->Items[2]->Text = IntToStr(CurBufNum)+ " " +IntToStr(CurVarNum)+ " " +IntToStr(CurSubBufNum);
-						// преобразование типа данных
-						for(unsigned int i=0; i<VarBufSize/sizeof(int); i++)
-							 DataBuf[i] = (*(unsigned int *)(PlotBuf+i*sizeof(int)) / formSettings->leBurstLen->Text.ToInt());
-						// отображение данных на осциллограмме
-						if(formOscDraw)
-						{
-							if(formOscDraw->WindowState != wsMinimized){
-								PlotDrawParam(1,DataBuf,VarBufSize/sizeof(int));
-								//!!formOscDraw->DrawOsc(DataBuf, VarBufSize/sizeof(int));
-							}
-						}
-						if(formSpDraw)
-						{
-							if(formSpDraw->WindowState != wsMinimized){
-								PlotDrawParam(2,DataBuf,VarBufSize/sizeof(int));
-								//!!formSpDraw->DrawSp(DataBuf, VarBufSize/sizeof(int));
-							}
-						}
-
-						// математическая обработка и отображение на индикатор
-						MathAndPlot(VarBufSize/sizeof(int), CurBufNum);
-						// контроль порога в окне и измерение координат
-						ControlAndMeasure(BufSize/sizeof(int), CurBufNum);
-/*
-
-						Math1(VarBufSize/sizeof(int), DataBuf);
-
-						int off;
-						if(rbRasterAF->Checked)
-						{
-							 formExpDraw->DrawOscCoherentAccum(ResXXRe, BufSize/4);
-
-							 if(RasterCounter >= leRasterPeriod->Text.ToIntDef(10))
-							 {
-									memset(ResXXRe, 0, sizeof(ResXXRe));
-									memset(ResXXIm, 0, sizeof(ResXXIm));
-									memset(ResYYRe, 0, sizeof(ResYYRe));
-									memset(ResYYIm, 0, sizeof(ResYYIm));
-
-									RasterCounter = 0;
-									RasterClean();
-							 } else RasterCounter++;
-
-							 off = formRasterSettings->UpDownX1->Position;
-							 for(int i=0; i<540; i++)
-									formRasterDrawXX->Table->Data[i][ResXXAng[i]] = (0.0001+ResXXAbs[i+off]);
-							 formRasterDrawXX->Raster1->Plot();
-
-							 off = formRasterSettings->UpDownY1->Position;
-							 for(int i=0; i<540; i++)
-									formRasterDrawYY->Table->Data[i][ResYYAng[i]] = (0.0001+ResYYAbs[i+off]);
-							 formRasterDrawYY->Raster1->Plot();
-						}else
-
-						if(rbRasterA->Checked)
-						{
-//               formExpDraw->DrawOscCoherentAccum(ResXXAbs, BufSize/4);
-							 formExpDraw->DrawOscI(ResXXAbs, BufSize/4);
-							 formExpDraw->DrawOscQ(ResYYAbs, BufSize/4);
-
-							 off = formRasterSettings->UpDownX1->Position;
-							 for(int i=0; i<540; i++)
-									formRasterDrawXX->Table->Data[i][CurBufNum] = (0.0001+ResXXAbs[i+off]);
-							 formRasterDrawXX->Raster1->Plot();
-
-							 off = formRasterSettings->UpDownY1->Position;
-							 for(int i=0; i<540; i++)
-									formRasterDrawYY->Table->Data[i][CurBufNum] = (0.0001+ResYYAbs[i+off]);
-							 formRasterDrawYY->Raster1->Plot();
-						}else
-						if(rbRasterF->Checked)
-						{
-							 formExpDraw->DrawOscCoherentAccum(ResXXPhase, BufSize/4);
-
-							 off = formRasterSettings->UpDownX1->Position;
-							 for(int i=0; i<540; i++)
-									formRasterDrawXX->Table->Data[i][CurBufNum] = (0.0001+ResXXPhase[i+off]);
-							 formRasterDrawXX->Raster1->Plot();
-
-							 off = formRasterSettings->UpDownY1->Position;
-							 for(int i=0; i<540; i++)
-									formRasterDrawYY->Table->Data[i][CurBufNum] = (0.0001+ResYYPhase[i+off]);
-							 formRasterDrawYY->Raster1->Plot();
-						}
-*/
-				 }
-			}break;
-
-			case 0x0009: // 32 импульса на экран усредненные
-			{
-				 unsigned int CurBufNum = *((unsigned int *) DataPtr);
-				 DataPtr += sizeof(int);
-				 unsigned int CurVarNum = *((unsigned int *) DataPtr);
-				 DataPtr += sizeof(int);
-				 unsigned int CurSubBufNum = *((unsigned int *) DataPtr);
-				 DataPtr += sizeof(int);
-
-				 unsigned int BufSize = formSettings->leSubBufNum->Text.ToInt()*1024*sizeof(int);
-				 unsigned int VarBufSize = BufSize*32;
-
-				 for(unsigned int i=0;i<1024;++i)
-				 {
-						PlotBuf[CurBufNum*VarBufSize+CurVarNum*BufSize+1024*CurSubBufNum+i] = *(DataPtr+i);
-				 }
-
-				 if(!formOscDraw) return;
-				 if(!formSpDraw) return;
-
-				 if((CurSubBufNum+1)*(CurVarNum+1) == (unsigned)(formSettings->leSubBufNum->Text.ToInt()*32*sizeof(int)))
-				 {
-						for(unsigned int i=0; i<VarBufSize/sizeof(int); i++)
-							 DataBuf[i] = (*(unsigned int *)(PlotBuf+i*sizeof(int)) / formSettings->leBurstLen->Text.ToInt());
-
-						//formOscDraw->Chart->LeftAxis->Automatic = false;
-						//formOscDraw->Chart->LeftAxis->SetMinMax(0, 255);
-						PlotDrawParam(1,DataBuf,VarBufSize/sizeof(int));
-						PlotDrawParam(2,DataBuf,VarBufSize/sizeof(int));
-
-						//!!formOscDraw->DrawOsc(DataBuf, VarBufSize/sizeof(int));
-						//!!formSpDraw->DrawSp(DataBuf, VarBufSize/sizeof(int));
-				 }
-			}break;
-
-			case 0x000B:
-			{
-				 if(!PulseResponseMemory) return;
-
-				 unsigned int MaxSubBufNum = formSettings->leSubBufNum->Text.ToInt()*sizeof(int);
-				 unsigned int CurBufNum = *((unsigned int *) DataPtr);
-				 DataPtr += sizeof(int);
-				 unsigned int CurVarNum = *((unsigned int *) DataPtr);
-				 DataPtr += sizeof(int);
-				 unsigned int CurSubBufNum = *((unsigned int *) DataPtr);
-				 DataPtr += sizeof(int);
-				 unsigned int CurPacketNum = CurSubBufNum + CurVarNum*MaxSubBufNum + CurBufNum*MaxSubBufNum*32;
-
-				 unsigned int BufSize = MaxSubBufNum*1024;
-				 unsigned int VarBufSize = BufSize*32;
-				 unsigned int CurBytePos = CurBufNum*VarBufSize+CurVarNum*BufSize+CurSubBufNum*1024;
-
-				 PulseResponseMemory->Position = (__int64) (CurBytePos);
-				 PulseResponseMemory->Write(DataPtr, 1024);
-
-				 if((FrameCnt%1024) == 0) formProgress->Label3->Caption = "Принято "+IntToStr(FrameCnt)+" пакетов";
-
-				 if(FrameCnt != CurPacketNum) // если потерялся пакет
-				 {
-						/*if(Memo->Visible)
-							 Memo->Lines->Add(IntToStr(FrameCnt) + "  " + IntToStr(CurPacketNum));*/
-						LostPacketCnt += CurPacketNum-FrameCnt;
-						formProgress->Label2->Caption = "Потеряно "+IntToStr(LostPacketCnt)+" пакетов";
-
-						FrameCnt = CurPacketNum;
-						PulseResponseMemory->Position = (__int64) ((CurBytePos>1024)?CurBytePos-1024:0);
-						PulseResponseMemory->Write(Null, 1024);
-				 }
-				 FrameCnt++;
-
-				 if((CurSubBufNum+1)*(CurVarNum+1)*(CurBufNum+1) == (unsigned)(leNumberOfMultOsc->Text.ToInt()*MaxSubBufNum*32))
-				 {
-						AnsiString Time = FormatDateTime("yyyy.mm.dd_hh.mm.ss", Now());
-						AnsiString PulseResponseName = "DATA\\avg_pr\\avg_"+leExpName->Text+"_"+Time+".dat";
-						AnsiString IniName = "DATA\\ini\\avg_"+leExpName->Text+"_"+Time+".ini";
-						PulseResponseMemory->SaveToFile(Path+PulseResponseName);
-						formSettings->SaveConfig(IniName);
-						if(PulseResponseMemory) {delete PulseResponseMemory; PulseResponseMemory = NULL;}
-
-						formProgress->Visible = false;
-						formProgress->Close();
-
-						sbMainStatusBar->Panels->Items[2]->Text = "Файл записан!";
-						ShowMessage("Файл записан!");
-				 }
-
-			}break;
-
-			case 0x001F: // зондирующий импульс
-			{
-				 unsigned int MaxSubBufNum = formSettings->leSubBufNum->Text.ToInt()*sizeof(int);
-//         unsigned int CurBufNum = *((unsigned int *) DataPtr);
-				 DataPtr += sizeof(int);
-				 unsigned int CurSubBufNum = *((unsigned int *) DataPtr);
-				 DataPtr += sizeof(int);
-
-				 unsigned int BufSize = MaxSubBufNum*1024;
-
-				 for(unsigned int i=0; i<1024; i++)
-				 {
-						PlotBuf[1024*CurSubBufNum+i] = *(DataPtr+i);
-				 }
-
-				 if((CurSubBufNum+1) == MaxSubBufNum)
-				 {
-						for(unsigned int i=0; i<BufSize/sizeof(int); i++)
-							 OriginalPulse[i] = ((*(unsigned int *)(PlotBuf+i*sizeof(int))) / 64);
-
-						if(!formOscDraw) return;
-						if(!formSpDraw) return;
-
-						formOscDraw->Chart->LeftAxis->Automatic = false;
-						formOscDraw->Chart->LeftAxis->SetMinMax(-512, 512);
-
-						PlotDrawParam(1,OriginalPulse,BufSize/sizeof(int));
-						PlotDrawParam(2,OriginalPulse,BufSize/sizeof(int));
-
-						//!!formOscDraw->DrawOsc(OriginalPulse, BufSize/sizeof(int));
-						//!!formSpDraw->DrawSp(OriginalPulse, BufSize/sizeof(int));
-
-/*            AnsiString Time = FormatDateTime("yyyy.mm.dd_hh.mm.ss", Now());
-						AnsiString FileName = "DATA\\pulse\\pulse_"+leExpName->Text+"_"+Time+".dat";
-						AnsiString IniName = "DATA\\ini\\pulse_"+leExpName->Text+"_"+Time+".ini";
-
-						TMemoryStream *memstr;
-						memstr = new TMemoryStream();
-						unsigned int Size = MaxSubBufNum*1024;
-						memstr->SetSize((int)Size);
-						memstr->Write(DataBuf, BufSize);
-						memstr->SaveToFile(Path+FileName);
-						formSettings->SaveConfig(IniName);
-						delete memstr; memstr = NULL;
-
-						sbMainStatusBar->Panels->Items[2]->Text = "Файл записан!";
-						ShowMessage("Файл записан!");
-*/
-				 }
-			}  break;
-
-			default: break;
-	 }
+void __fastcall TformMain::ProcessAnswer(short int *Buffer, unsigned int CmdNum){
+        WorkerCmdNum = CmdNum;
+        //1030 = 1024 + 6(микрозаголовок)
+        memcpy(WorkerBuffer+MainPosition*1030,Buffer,1030*2);
+        ++MainPosition;
 }
-//---------------------------------------------------------------------------
-void __fastcall TformMain::MathAndPlot(int BufSize, int CurBufNum)
-{
-		// корреляционная обработка перекрёстных поляризаций
-		Math1(BufSize, DataBuf);
-		// добавление данных в память для измерения кординат, только 1024 выборки из ответа
-		if(IndicatorXX) memcpy(&IndicatorXX[1024*CurBufNum], ResXXAbs, 1024*sizeof(double));
-		if(IndicatorYY) memcpy(&IndicatorYY[1024*CurBufNum], ResYYAbs, 1024*sizeof(double));
-		// счётчик накоплений для АФ режима
-		/*else */RasterCounter++;
-		if(RasterCounter >= (unsigned)(leRasterPeriod->Text.ToIntDef(10)))
-			RasterCounter = 0;
 
-		int offset, length;
-		if(rbRasterAF->Checked) // вывод на индикатор в режиме "АФ"
-		{
-			 if(RasterCounter == 0) RasterClean();
-			 PlotDrawParam(3,ResXXAbs,BufSize/4);
-			 //!!formExpDraw->DrawOscCoherentAccum(ResXXAbs, BufSize/4);
-
-			 // заполнение растра поляризации ХХ
-			 offset = formRasterSettings->UpDownX1->Position;
-			 length = formRasterDrawXX->Table->Row; // длина выборки
-			 if(BufSize/4 < (length+offset)) length = (BufSize/4-offset); // проверка выхода за пределы отклика
-			 double value = atan2(0, -10);
-			 int index;
-			 for(int i=0; i<length; i++)
-			 {
-					// !!! значения аргумента в диапазоне от -180 до 180
-					index = round(ResXXAng[i+offset]+180); // округдение аргумента для определения индекса ячейки
-					// приведение фазы к диапазону от 0 до 360
-					while(index >= formRasterDrawXX->Table->Col) index -= formRasterDrawXX->Table->Col;
-					while(index < 0) index += formRasterDrawXX->Table->Col;
-					// накопление значений
-					value = formRasterDrawXX->Table->Data[i][index];
-					formRasterDrawXX->Table->Data[i][index] = (value+ResXXAbs[i+offset]);
-			 }
-			 //!!formRasterDrawXX->Raster1->Plot();
-
-			 offset = formRasterSettings->UpDownY1->Position;
-			 length = formRasterDrawYY->Table->Row; // длина выборки
-			 if(BufSize/4 < (length+offset)) length = (BufSize/4-offset); // проверка выхода за пределы отклика
-			 for(int i=0; i<length; i++)
-			 {
-					// !!! значения аргумента в диапазоне от -180 до 180
-					index = round(ResYYAng[i+offset]+180); // округдение аргумента для определения индекса ячейки
-					// приведение фазы к диапазону от 0 до 360
-					while(index >= formRasterDrawYY->Table->Col) index -= formRasterDrawYY->Table->Col;
-					while(index < 0) index += formRasterDrawYY->Table->Col;
-					// накопление значений
-					value = formRasterDrawYY->Table->Data[i][index];
-					formRasterDrawYY->Table->Data[i][index] = (value+ResYYAbs[i+offset]);
-			 }
-			 //!!formRasterDrawYY->Raster1->Plot();
-		}
-		else // вывод амплитудного или фазового растра в секторе
-		{
-
-			 if(rbRasterA->Checked) PlotDrawParam(3,ResXXAbs,BufSize/4);
-			 else  PlotDrawParam(3,ResXXAng,BufSize/4);
-				//!!if(rbRasterA->Checked) formExpDraw->DrawOscCoherentAccum(ResXXAbs, BufSize/4); // амплитудный эксперимент
-				//!!else formExpDraw->DrawOscCoherentAccum(ResXXAng, BufSize/4); // фазовый эксперимент
-
-				// добавление в растр поляризации ХХ
-				offset = formRasterSettings->UpDownX1->Position; // отступ от нуля реализации
-				length = formRasterDrawXX->Table->Row; // длина выборки
-				if(BufSize/4 < (length+offset)) length = (BufSize/4-offset); // проверка выхода за пределы отклика
-				for(int i=0; i<length; i++)
-				{
-					if(rbRasterA->Checked) formRasterDrawXX->Table->Data[i][CurBufNum] = (ResXXAbs[i+offset]); //амплитуда
-					else formRasterDrawXX->Table->Data[i][CurBufNum] = (ResXXPhase[i+offset]); // фаза
-				}
-				// добавление в растр поляризации YY
-				offset = formRasterSettings->UpDownY1->Position; // отступ от нуля реализации
-				length = formRasterDrawYY->Table->Row; // длина выборки
-				if(BufSize/4 < (length+offset)) length = (BufSize/4-offset); // проверка выхода за пределы отклика
-				for(int i=0; i<length; i++)
-				{
-					if(rbRasterA->Checked) formRasterDrawYY->Table->Data[i][CurBufNum] = (ResYYAbs[i+offset]); //амплитуда
-					else formRasterDrawYY->Table->Data[i][CurBufNum] = (ResYYPhase[i+offset]); // фаза
-				}
-				// обновление растров
-				//!!formRasterDrawXX->Raster1->Plot();
-				//!!formRasterDrawYY->Raster1->Plot();
-		}
-}
-//---------------------------------------------------------------------------
 // функция контроля погора и измерения координат
 void __fastcall TformMain::ControlAndMeasure(int BufSize, int CurBufNum)
 {
@@ -1649,7 +959,6 @@ void __fastcall TformMain::bSendParamClick(TObject *Sender)
 	 unsigned short BuffSize = 70;
 	 unsigned char *Buffer = new unsigned char[BuffSize];
 	 unsigned char *DataPtr = Buffer;
-         memset(&PlotBuf,0,N);
 
 	 *((double *)(DataPtr)) = formSettings->leFreq->Text.ToDouble();
 	 DataPtr += sizeof(double);//8
@@ -1966,6 +1275,7 @@ void __fastcall TformMain::ReadFile1Click(TObject *Sender)
                                                 FileReadTimer->Enabled = true;
 						//mmFileReadTimer = timeSetEvent(FileReadTimerInterval,0,TimerProc,NULL,TIME_PERIODIC);
 						Action1Execute(this);
+                                                cleanView();
 						RasterClean();
                                                 FileReadTimerProc();
 						break;
@@ -2154,9 +1464,9 @@ void __fastcall TformMain::FileReadTimerProc()
 										else FileReadTimerInterval = (int) FileReadTimerIntervalF;
 										FileReadTimer->Enabled = true;
                                                                                 FileReadTimerInterval = 4;
-										//mmFileReadTimer = timeSetEvent(FileReadTimerInterval,0,TimerProc,NULL,TIME_PERIODIC);
+                                                                                cleanView();
 										RasterClean();
-                                                                                //FileReadTimerProc();
+                                                                                FileReadTimerProc();
 										break;
 								}
 								FileCounter++;
@@ -2180,39 +1490,6 @@ void __fastcall TformMain::FileReadTimerProc()
 	  //timeKillEvent(mmFileReadTimer);
           mmFileReadTimer = 0;
 	}
-}
-//---------------------------------------------------------------------------
-void __fastcall TformMain::ScanParamChange(TObject *Sender)
-{
-/*  ПОКА АВТОНАСТРОЙКУ ПАРАМЕТРОВ НЕ ДЕЛАТЬ
-	// пересчёт параметров сканирования
-	// ключевые - сектор сканирования и период повторения пачек
-	if(AnsiString(Sender->ClassName()) == "TLabeledEdit")
-	{
-		TLabeledEdit *LabeledEdit = (TLabeledEdit*) Sender;
-		if(LabeledEdit->Modified)
-		{
-			double A, P;
-			int N;
-			A = leScanSector->Text.ToDouble();
-			N = leNumberOfMultOsc->Text.ToInt();
-			P = 1e-3*leMulOscDelay->Text.ToDouble();
-			if(LabeledEdit->Name == "leNumberOfMultOsc")  // изменение числа пачек
-			{
-				A = N*P;
-				leScanSector->Text = FormatFloat("####0.###", A);
-			}
-			else // изменение сектора или периода пачек
-			{
-				A /= P;
-				N = floor(A);
-				if((A-N)>0.5) N++;
-				N++;
-				leNumberOfMultOsc->Text = IntToStr(N);
-			}
-		}
-	}
-*/
 }
 //---------------------------------------------------------------------------
 bool __fastcall TformMain::InitFileRead(AnsiString FileName, bool Message)
@@ -2253,8 +1530,13 @@ bool __fastcall TformMain::InitFileRead(AnsiString FileName, bool Message)
                         FileResponseMemory->Position = (__int64) (0);
 			FileResponseMemory->Read(FileBufferTmp, 112);
                         FileReadBlockSize = FileBufferTmp[13];
+                        int bSize = 2*(FileReadBlockSize*32+112);
+                        FileReadBSize = Size/bSize;
+                        AnsiString FileReadBSizeStr = IntToStr(FileReadBSize);
+                        SettingsUnitForm->lePacketNumber->Text = FileReadBSizeStr;
+                        lePacketNumberMain = FileReadBSize;
                         unsigned char *CmdPtr = (unsigned char *)FileBuffer;
-                        FileReadBSize = (CmdPtr[8]) | ((CmdPtr[9]) << 8) | ((CmdPtr[10]) << 16) | ((CmdPtr[11]) << 24);
+                        //FileReadBSize = (CmdPtr[8]) | ((CmdPtr[9]) << 8) | ((CmdPtr[10]) << 16) | ((CmdPtr[11]) << 24);
                         delete [] FileBufferTmp;
                 }
 		memset(FileBuffer, 0, (1024+12)*2);
@@ -2267,6 +1549,11 @@ bool __fastcall TformMain::InitFileRead(AnsiString FileName, bool Message)
                 if(IndicatorXX) delete[] IndicatorXX;
 	        if(IndicatorYY) delete[] IndicatorYY;
 	        int size = 1024*leNumberOfMultOsc->Text.ToInt();
+                if(lePacketNumberMain*1024 > size) {
+                   leNumberOfMultOsc->Text = lePacketNumberMain;
+                   size = lePacketNumberMain*1024;
+                }
+
 	        IndicatorXX = new double[size];
 	        IndicatorYY = new double[size];
 		memset(IndicatorXX, 0, size*sizeof(double));
@@ -2376,10 +1663,32 @@ void __fastcall TformMain::Button6Click(TObject *Sender)
 //---------------------------------------------------------------------------
 
 
-
 //int FileReadTimerTimerInt = 0;
 void __fastcall TformMain::PlotTimerTimer(TObject *Sender)
 {
+        int BufSize = 1024;
+        int VarBufSize = BufSize*4;
+        if(PlotPosition < WorkerPosition) {
+                for( ; PlotPosition <= WorkerPosition; ++PlotPosition){
+						if(formOscDraw)
+						{
+							if(formOscDraw->WindowState != wsMinimized){
+								PlotDrawParam(1,DataBuf,VarBufSize);
+							}
+						}
+						if(formSpDraw)
+						{
+							if(formSpDraw->WindowState != wsMinimized){
+								PlotDrawParam(2,DataBuf,VarBufSize);
+							}
+						}
+                        sbMainStatusBar->Panels->Items[0]->Text = "Пачка "+IntToStr(PlotPosition);
+			MathAndPlot(1024*4, PlotPosition);
+			// контроль порога в окне и измерение координат
+			// вызов строго после MathAndPlot
+			ControlAndMeasure(1024, PlotPosition);
+                }
+        }
         //FileReadTimerTimerInt++;
         //Memo->Lines->Add("PlotTimerTimer");
         FileReadTimerProcCnt = 0;
@@ -2760,6 +2069,14 @@ void __fastcall TformMain::bAvgPRClick(TObject *Sender)
 	 LostPacketCnt = 0;
 	 formProgress->TimeLeft = leNumberOfMultOsc->Text.ToInt()*leMulOscDelay->Text.ToInt()/1000 + leNumberOfMultOsc->Text.ToInt()*formSettings->leSubBufNum->Text.ToInt()*4/0.085/1024;
 	 formProgress->ShowModal();
+}
+//---------------------------------------------------------------------------
+
+void __fastcall TformMain::leNumberOfMultOscChange(TObject *Sender)
+{
+        if(SettingsUnitForm->lePacketNumber->Text != leNumberOfMultOsc->Text)
+                SettingsUnitForm->lePacketNumber->Text = leNumberOfMultOsc->Text;
+        lePacketNumberMain = SettingsUnitForm->lePacketNumber->Text.ToInt();
 }
 //---------------------------------------------------------------------------
 
