@@ -216,6 +216,7 @@ public:		// User declarations
    void __fastcall PrintPacket(unsigned Size, unsigned char *Buffer);
    void __fastcall Log(AnsiString &msg);
    void __fastcall cleanView();
+   double __fastcall atan2Safe(double x, double y);
 
    double ResXXRe[MainbufferSizeDouble], ResXXIm[MainbufferSizeDouble];
    double ResYYRe[MainbufferSizeDouble], ResYYIm[MainbufferSizeDouble];

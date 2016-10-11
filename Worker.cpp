@@ -71,6 +71,9 @@ void __fastcall TWorker::MyCorrelation(double* in, int dataSize, double* kernel,
 
 		return;
 };
+double __fastcall TWorker::atan2Safe(double x, double y){
+        return x == 0 && y == 0 ? 0 : atan2(x, y);
+}
 //---------------------------------------------------------------------------
 void __fastcall TWorker::Math1(unsigned int BufSize, double *DataBuf)
 {
@@ -105,16 +108,16 @@ void __fastcall TWorker::Math1(unsigned int BufSize, double *DataBuf)
 			// вычисление фазы сигнала с антенны 0 в режиме ХХ
 			if((a0XXsv1[i] != 0) && (a0XXsv0[i] != 0))
 
-				 ResXXPhase[i] = 180*(atan2(a0XXsv1[i], a0XXsv0[i])+M_PI)/M_PI;
+				 ResXXPhase[i] = 180*(atan2Safe(a0XXsv1[i], a0XXsv0[i])+M_PI)/M_PI;
                                  //Убрал из   ResXXPhase[i]    +M_PI для устранения фазового сдвига между каналами - не помогло
                                 // ResXXPhase[i] = 180*(atan2(a0XXsv1[i], a0XXsv0[i]))/M_PI;
 
 			if((a0YYsv1[i] != 0) && (a0YYsv0[i] != 0))
-				 ResYYPhase[i] = 180*(atan2(a0YYsv1[i], a0YYsv0[i])+M_PI)/M_PI;
+				 ResYYPhase[i] = 180*(atan2Safe(a0YYsv1[i], a0YYsv0[i])+M_PI)/M_PI;
 
 			// вычисление модуля и аргумента произведения сигналов в режиме ХХ
 			ResXXAbs[i] = pow(ResXXRe[i]*ResXXRe[i] + ResXXIm[i]*ResXXIm[i], 0.5);
-			if(ResXXAbs[i] >=1e-13) ResXXAng[i] = RAD*(atan2(ResXXIm[i], ResXXRe[i]));
+			if(ResXXAbs[i] >=1e-13) ResXXAng[i] = RAD*(atan2Safe(ResXXIm[i], ResXXRe[i]));
 			else ResXXAng[i] = 0; // аргумент от -180 до 180 градусов
 
 			// произведение сигналов с двух антенн в режиме YY с комплексным сопряжением
@@ -126,7 +129,7 @@ void __fastcall TWorker::Math1(unsigned int BufSize, double *DataBuf)
 
 			// вычисление модуля и аргумента произведения сигналов в режиме YY
 			ResYYAbs[i] = pow(ResYYRe[i]*ResYYRe[i] + ResYYIm[i]*ResYYIm[i], 0.5);
-			if(ResYYAbs[i] >= 1e-13) ResYYAng[i] = RAD*(atan2(ResYYIm[i], ResYYRe[i]));
+			if(ResYYAbs[i] >= 1e-13) ResYYAng[i] = RAD*(atan2Safe(ResYYIm[i], ResYYRe[i]));
 			else ResYYAng[i] = 0;
 
 	 }

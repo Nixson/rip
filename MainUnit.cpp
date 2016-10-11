@@ -133,6 +133,9 @@ void __fastcall RasterClean()
 
 
 //---------------------------------------------------------------------------
+double __fastcall TformMain::atan2Safe(double x, double y){
+        return x == 0 && y == 0 ? 0 : atan2(x, y);
+}
 void __fastcall AlgLib_Convolution(double *ain, int aSize, double *bin, int bSize, double *res)
 {
 	 a.setlength(aSize);
@@ -247,7 +250,7 @@ void __fastcall TformMain::MathAndPlot(int BufSize, int CurBufNum)
 			 offset = formRasterSettings->UpDownX1->Position;
 			 length = formRasterDrawXX->Table->Row; // длина выборки
 			 if(BufSize/4 < (length+offset)) length = (BufSize/4-offset); // проверка выхода за пределы отклика
-			 double value = atan2(0, -10);
+			 double value = atan2Safe(0, -10);
 			 int index;
 			 for(int i=0; i<length; i++)
 			 {
@@ -621,7 +624,7 @@ void __fastcall TformMain::ControlAndMeasure(int BufSize, int CurBufNum)
 					 DistXX = 3e8*indexXX*Td/2; // дальность считается по максимуму в стробе
 					 // разность фаз по сумме в стробе
 					 if((fabs(SumXXIm) > 1e-12) || (fabs(SumXXRe) > 1e-12))
-							 PhasXX = atan2(SumXXIm, SumXXRe)*RAD;
+							 PhasXX = atan2Safe(SumXXIm, SumXXRe)*RAD;
 					 else PhasXX = 0;
                                          if(PhasXX >= (double)LeftRightDelta->Value ){
                                                  PhasXX = 0;
@@ -636,7 +639,7 @@ void __fastcall TformMain::ControlAndMeasure(int BufSize, int CurBufNum)
 					 DistYY = 3e8*indexYY*Td/2; // дальность считается по максимуму в стробе
 					 // разность фаз по сумме в стробе !!! надо ограничивать строб
 					 if((fabs(SumYYIm) > 1e-12) || (fabs(SumYYRe) > 1e-12))
-							 PhasYY = atan2(SumYYIm, SumYYRe)*RAD;
+							 PhasYY = atan2Safe(SumYYIm, SumYYRe)*RAD;
 
 					 else PhasYY = 0;
                                          if(PhasYY >= (double)LeftRightDelta->Value ) {
