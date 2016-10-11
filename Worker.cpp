@@ -6,11 +6,12 @@
 #include "MainUnit.h"
 #include "Worker.h"
 #include "formChanels.h"
+//#inclide ""
 #include "math.h"
+//#include "ap.h"
 #pragma package(smart_init)
 
 #define RAD 57.295779513082320877
-
 
 extern const unsigned int N;
 extern double *DataBuf;
@@ -72,7 +73,17 @@ void __fastcall TWorker::MyCorrelation(double* in, int dataSize, double* kernel,
 		return;
 };
 double __fastcall TWorker::atan2Safe(double x, double y){
-        return x == 0 && y == 0 ? 0 : atan2(x, y);
+        double response = 0;
+        if ( (x < 0.001 || x > -0.001) && y < 0.001 || y > -0.001){
+                return 0;
+        }
+        if( x == 0 && y == 0)
+                return response;
+        try {
+                response = atan2(x,y);
+        }
+        catch(...){}
+        return response;
 }
 //---------------------------------------------------------------------------
 void __fastcall TWorker::Math1(unsigned int BufSize, double *DataBuf)

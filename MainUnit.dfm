@@ -773,7 +773,6 @@ object formMain: TformMain
     end
   end
   object TimerARP: TTimer
-    Enabled = False
     OnTimer = TimerARPTimer
     Left = 352
     Top = 16

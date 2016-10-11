@@ -910,6 +910,42 @@ void __fastcall TformMain::TimerAckTimer(TObject *Sender)
 
 void __fastcall TformMain::TimerARPTimer(TObject *Sender)
 {
+        int BufSize = 1024;
+        int VarBufSize = BufSize*4;
+        if(PlotPosition < WorkerPositionResponse) {
+                for( ; PlotPosition <= WorkerPositionResponse; ++PlotPosition){
+                        memcpy(ResXXRe,MainResXXRe+PlotPosition*1024,1024*sizeof(double));
+                        memcpy(ResXXIm,MainResXXIm+PlotPosition*1024,1024*sizeof(double));
+                        memcpy(ResYYRe,MainResYYRe+PlotPosition*1024,1024*sizeof(double));
+                        memcpy(ResYYIm,MainResYYIm+PlotPosition*1024,1024*sizeof(double));
+
+                        memcpy(ResXXAbs,MainResXXAbs+PlotPosition*1024,1024*sizeof(double));
+                        memcpy(ResYYAbs,MainResYYAbs+PlotPosition*1024,1024*sizeof(double));
+                        memcpy(ResXXAng,MainResXXAng+PlotPosition*1024,1024*sizeof(double));
+                        memcpy(ResYYAng,MainResYYAng+PlotPosition*1024,1024*sizeof(double));
+
+                        memcpy(ResXXPhase,MainResXXPhase+PlotPosition*1024,1024*sizeof(double));
+                        memcpy(ResYYPhase,MainResYYPhase+PlotPosition*1024,1024*sizeof(double));
+						if(formOscDraw)
+						{
+							if(formOscDraw->WindowState != wsMinimized){
+								PlotDrawParam(1,DataBuf,VarBufSize);
+							}
+						}
+						if(formSpDraw)
+						{
+							if(formSpDraw->WindowState != wsMinimized){
+								PlotDrawParam(2,DataBuf,VarBufSize);
+							}
+						}
+                        sbMainStatusBar->Panels->Items[0]->Text = "Пачка "+IntToStr(PlotPosition);
+			MathAndPlot(1024*4, PlotPosition);
+			// контроль порога в окне и измерение координат
+			// вызов строго после MathAndPlot
+
+			ControlAndMeasure(1024, PlotPosition);
+                }
+        }
 	 /*if(WaitingARPAnswer)
 	 {
 			if(ARPAttempt<2)
@@ -923,7 +959,7 @@ void __fastcall TformMain::TimerARPTimer(TObject *Sender)
 			}
 	 }
          */
-	 if(ARPRetries<100)
+	 /*if(ARPRetries<100)
 	 {
 			ARPRetries++;
 	 }else
@@ -933,7 +969,7 @@ void __fastcall TformMain::TimerARPTimer(TObject *Sender)
 			ARPAnswerRecieved = false;
 	 }
 
-	 sbMainStatusBar->Panels->Items[1]->Text = "ARP retry timer: " + IntToStr(100-ARPRetries);
+	 sbMainStatusBar->Panels->Items[1]->Text = "ARP retry timer: " + IntToStr(100-ARPRetries); */
 }
 
 void __fastcall TformMain::RestartTimer(TTimer *Timer)
@@ -1672,41 +1708,6 @@ void __fastcall TformMain::Button6Click(TObject *Sender)
 //int FileReadTimerTimerInt = 0;
 void __fastcall TformMain::PlotTimerTimer(TObject *Sender)
 {
-        int BufSize = 1024;
-        int VarBufSize = BufSize*4;
-        if(PlotPosition < WorkerPositionResponse) {
-                for( ; PlotPosition <= WorkerPositionResponse; ++PlotPosition){
-                        memcpy(ResXXRe,MainResXXRe+PlotPosition*1024,1024*sizeof(double));
-                        memcpy(ResXXIm,MainResXXIm+PlotPosition*1024,1024*sizeof(double));
-                        memcpy(ResYYRe,MainResYYRe+PlotPosition*1024,1024*sizeof(double));
-                        memcpy(ResYYIm,MainResYYIm+PlotPosition*1024,1024*sizeof(double));
-
-                        memcpy(ResXXAbs,MainResXXAbs+PlotPosition*1024,1024*sizeof(double));
-                        memcpy(ResYYAbs,MainResYYAbs+PlotPosition*1024,1024*sizeof(double));\
-                        memcpy(ResXXAng,MainResXXAng+PlotPosition*1024,1024*sizeof(double));
-                        memcpy(ResYYAng,MainResYYAng+PlotPosition*1024,1024*sizeof(double));
-
-                        memcpy(ResXXPhase,MainResXXPhase+PlotPosition*1024,1024*sizeof(double));
-                        memcpy(ResYYPhase,MainResYYPhase+PlotPosition*1024,1024*sizeof(double));
-						if(formOscDraw)
-						{
-							if(formOscDraw->WindowState != wsMinimized){
-								PlotDrawParam(1,DataBuf,VarBufSize);
-							}
-						}
-						if(formSpDraw)
-						{
-							if(formSpDraw->WindowState != wsMinimized){
-								PlotDrawParam(2,DataBuf,VarBufSize);
-							}
-						}
-                        sbMainStatusBar->Panels->Items[0]->Text = "Пачка "+IntToStr(PlotPosition);
-			MathAndPlot(1024*4, PlotPosition);
-			// контроль порога в окне и измерение координат
-			// вызов строго после MathAndPlot
-			ControlAndMeasure(1024, PlotPosition);
-                }
-        }
         //FileReadTimerTimerInt++;
         //Memo->Lines->Add("PlotTimerTimer");
         FileReadTimerProcCnt = 0;

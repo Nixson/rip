@@ -22,6 +22,7 @@
 #include <ScktComp.hpp>
 #include <StdCtrls.hpp>
 
+
 #define MainbufferSizeDouble (65536*2)
 //---------------------------------------------------------------------------
 class TformMain : public TForm
