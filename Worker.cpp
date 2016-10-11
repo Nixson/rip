@@ -27,6 +27,7 @@ extern double *MainResXXPhase, *MainResYYPhase;
 
 extern int MainPosition;
 extern int WorkerPosition;
+extern int WorkerPositionResponse;
 extern unsigned int WorkerCmdNum;
 extern short int *WorkerBuffer;
 
@@ -131,19 +132,19 @@ extern unsigned int RasterCounter;
 void __fastcall TWorker::copyResult(){
         try {
                 memcpy(DataBuf,DataBufWorker,1024*sizeof(double));
-                memcpy(MainResXXRe+WorkerPosition*1024,ResXXRe,1024*sizeof(double));
-                memcpy(MainResXXIm+WorkerPosition*1024,ResXXIm,1024*sizeof(double));
-                memcpy(MainResYYRe+WorkerPosition*1024,ResYYRe,1024*sizeof(double));
-                memcpy(MainResYYIm+WorkerPosition*1024,ResYYIm,1024*sizeof(double));
+                memcpy(MainResXXRe+WorkerPositionResponse*1024,ResXXRe,1024*sizeof(double));
+                memcpy(MainResXXIm+WorkerPositionResponse*1024,ResXXIm,1024*sizeof(double));
+                memcpy(MainResYYRe+WorkerPositionResponse*1024,ResYYRe,1024*sizeof(double));
+                memcpy(MainResYYIm+WorkerPositionResponse*1024,ResYYIm,1024*sizeof(double));
 
-                memcpy(MainResXXAbs+WorkerPosition*1024,ResXXAbs,1024*sizeof(double));
-                memcpy(MainResYYAbs+WorkerPosition*1024,ResYYAbs,1024*sizeof(double));
+                memcpy(MainResXXAbs+WorkerPositionResponse*1024,ResXXAbs,1024*sizeof(double));
+                memcpy(MainResYYAbs+WorkerPositionResponse*1024,ResYYAbs,1024*sizeof(double));
 
-                memcpy(MainResXXAng+WorkerPosition*1024,ResXXAng,1024*sizeof(double));
-                memcpy(MainResYYAng+WorkerPosition*1024,ResYYAng,1024*sizeof(double));
+                memcpy(MainResXXAng+WorkerPositionResponse*1024,ResXXAng,1024*sizeof(double));
+                memcpy(MainResYYAng+WorkerPositionResponse*1024,ResYYAng,1024*sizeof(double));
 
-                memcpy(MainResXXPhase+WorkerPosition*1024,ResXXPhase,1024*sizeof(double));
-                memcpy(MainResYYPhase+WorkerPosition*1024,ResYYPhase,1024*sizeof(double));
+                memcpy(MainResXXPhase+WorkerPositionResponse*1024,ResXXPhase,1024*sizeof(double));
+                memcpy(MainResYYPhase+WorkerPositionResponse*1024,ResYYPhase,1024*sizeof(double));
         }
         catch (...){}
 }
@@ -152,6 +153,7 @@ void __fastcall TWorker::MathAndPlot(int BufSize, int CurBufNum)
 		// коррел€ционна€ обработка перекрЄстных пол€ризаций
 		Math1(BufSize, DataBufWorker);
                 Synchronize(copyResult);
+                ++WorkerPositionResponse;
 }
 
 void __fastcall TWorker::ProcessAnswer(short int *Buffer, unsigned int CmdNum)

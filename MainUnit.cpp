@@ -48,6 +48,8 @@ TWorker * Worker;
 
 int MainPosition = 0;
 int WorkerPosition = 0;
+int WorkerPositionResponse = 0;
+
 int WorkerBufSize = 0;
 int PlotPosition = 0;
 unsigned int WorkerCmdNum = 0;
@@ -183,7 +185,7 @@ void __fastcall TformMain::cleanView(){
         if(lePacketNumberLocal > lePacketNumberMain)
                 lePacketNumberMain = lePacketNumberLocal;
         if(WorkerBuffer) delete [] WorkerBuffer;
-        WorkerBuffer = new short int [lePacketNumberMain*1030];
+        WorkerBuffer = new short int [lePacketNumberMain*1030*32];
 
         if(MainResXXRe) delete [] MainResXXRe;
         if(MainResXXIm) delete [] MainResXXIm;
@@ -1534,7 +1536,7 @@ bool __fastcall TformMain::InitFileRead(AnsiString FileName, bool Message)
                         FileReadBSize = Size/bSize;
                         AnsiString FileReadBSizeStr = IntToStr(FileReadBSize);
                         SettingsUnitForm->lePacketNumber->Text = FileReadBSizeStr;
-                        lePacketNumberMain = FileReadBSize;
+                        lePacketNumberMain = FileReadBSize+128;
                         unsigned char *CmdPtr = (unsigned char *)FileBuffer;
                         //FileReadBSize = (CmdPtr[8]) | ((CmdPtr[9]) << 8) | ((CmdPtr[10]) << 16) | ((CmdPtr[11]) << 24);
                         delete [] FileBufferTmp;
@@ -2076,7 +2078,7 @@ void __fastcall TformMain::leNumberOfMultOscChange(TObject *Sender)
 {
         if(SettingsUnitForm->lePacketNumber->Text != leNumberOfMultOsc->Text)
                 SettingsUnitForm->lePacketNumber->Text = leNumberOfMultOsc->Text;
-        lePacketNumberMain = SettingsUnitForm->lePacketNumber->Text.ToInt();
+        lePacketNumberMain = SettingsUnitForm->lePacketNumber->Text.ToInt()+128;
 }
 //---------------------------------------------------------------------------
 

@@ -10,7 +10,7 @@
       alglib\alglibinternal.obj Raster.obj TargetUnit.obj MeasureUnit.obj 
       CreateCoord.obj ControlOptionsUnit.obj OrgMUnit.obj OrgDMUnit.obj 
       OrgCMUnit.obj ScatterUnit.obj formChanels.obj SettingsUnitRLM.obj 
-      ShowThread.obj"/>
+      ShowThread.obj Worker.obj"/>
     <RESFILES value="RIP_wp.res"/>
     <IDLFILES value=""/>
     <IDLGENFILES value=""/>
@@ -96,6 +96,7 @@
       <FILE FILENAME="formChanels.cpp" FORMNAME="Fchanels" UNITNAME="formChanels" CONTAINERID="CCompiler" DESIGNCLASS="" LOCALCOMMAND=""/>
       <FILE FILENAME="SettingsUnitRLM.cpp" FORMNAME="SettingsUnitForm" UNITNAME="SettingsUnitRLM" CONTAINERID="CCompiler" DESIGNCLASS="" LOCALCOMMAND=""/>
       <FILE FILENAME="ShowThread.cpp" FORMNAME="" UNITNAME="ShowThread" CONTAINERID="CCompiler" DESIGNCLASS="" LOCALCOMMAND=""/>
+      <FILE FILENAME="Worker.cpp" FORMNAME="" UNITNAME="Worker" CONTAINERID="CCompiler" DESIGNCLASS="" LOCALCOMMAND=""/>
   </FILELIST>
   <BUILDTOOLS>
   </BUILDTOOLS>

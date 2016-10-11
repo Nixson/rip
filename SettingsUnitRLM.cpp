@@ -666,7 +666,7 @@ void __fastcall TSettingsUnitForm::lePacketNumberChange(TObject *Sender)
 {
         if(lePacketNumber->Text != formMain->leNumberOfMultOsc->Text)
                 lePacketNumber->Text = formMain->leNumberOfMultOsc->Text;
-        lePacketNumberMain = lePacketNumber->Text.ToInt();
+        lePacketNumberMain = lePacketNumber->Text.ToInt()+128;
 }
 //---------------------------------------------------------------------------
 
