@@ -19,6 +19,9 @@ extern double *OriginalPulse;
 extern double *OriginalPulseRe;
 extern double *OriginalPulseIm;
 
+double *OriginalPulseReWorker;
+double *OriginalPulseImWorker;
+
 extern double *MainResXXRe, *MainResXXIm,*MainResYYRe, *MainResYYIm;
 extern double *MainResXXAbs, *MainResXXAng,*MainResYYAbs, *MainResYYAng;
 extern double *MainResXXPhase, *MainResYYPhase;
@@ -36,6 +39,8 @@ __fastcall TWorker::TWorker(bool CreateSuspended)
 {
         BufferOnMain = new short int [1030];
         DataBufWorker = new double [bufferSizeDouble];
+        OriginalPulseReWorker = new double [1024];
+        OriginalPulseImWorker = new double [1024];
 }
 
 void __fastcall TWorker::MyCorrelation(double* in, int dataSize, double* kernel, int kernelSize, double* out)
@@ -77,14 +82,14 @@ void __fastcall TWorker::Math1(unsigned int BufSize, double *DataBuf)
 	 a0YY = DataBuf+Size*2;
 	 a1YY = DataBuf+Size*3;
 
-	 MyCorrelation(a0XX, Size, OriginalPulseRe, Size, a0XXsv0);
-	 MyCorrelation(a0XX, Size, OriginalPulseIm, Size, a0XXsv1);
-	 MyCorrelation(a1XX, Size, OriginalPulseRe, Size, a1XXsv0);
-	 MyCorrelation(a1XX, Size, OriginalPulseIm, Size, a1XXsv1);
-	 MyCorrelation(a0YY, Size, OriginalPulseRe, Size, a0YYsv0);
-	 MyCorrelation(a0YY, Size, OriginalPulseIm, Size, a0YYsv1);
-	 MyCorrelation(a1YY, Size, OriginalPulseRe, Size, a1YYsv0);
-	 MyCorrelation(a1YY, Size, OriginalPulseIm, Size, a1YYsv1);
+	 MyCorrelation(a0XX, Size, OriginalPulseReWorker, Size, a0XXsv0);
+	 MyCorrelation(a0XX, Size, OriginalPulseImWorker, Size, a0XXsv1);
+	 MyCorrelation(a1XX, Size, OriginalPulseReWorker, Size, a1XXsv0);
+	 MyCorrelation(a1XX, Size, OriginalPulseImWorker, Size, a1XXsv1);
+	 MyCorrelation(a0YY, Size, OriginalPulseReWorker, Size, a0YYsv0);
+	 MyCorrelation(a0YY, Size, OriginalPulseImWorker, Size, a0YYsv1);
+	 MyCorrelation(a1YY, Size, OriginalPulseReWorker, Size, a1YYsv0);
+	 MyCorrelation(a1YY, Size, OriginalPulseImWorker, Size, a1YYsv1);
 
 	 for(unsigned int i=0; i<Size; ++i)
 	 {
@@ -247,6 +252,9 @@ void __fastcall TWorker::ProcessAnswer(short int *Buffer, unsigned int CmdNum)
 void __fastcall TWorker::copyBuffer(){
         try {
         memcpy(BufferOnMain,WorkerBuffer+WorkerPosition*1030,1030*2);
+        memcpy(OriginalPulseReWorker,OriginalPulseRe,1024*sizeof(double));
+        memcpy(OriginalPulseImWorker,OriginalPulseIm,1024*sizeof(double));
+
         }
         catch (...){}
 }

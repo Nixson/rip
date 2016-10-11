@@ -62,8 +62,8 @@ const unsigned int N = 65536*2;
 double *DataBuf;
 double OriginalPulse[N];
 comp OriginalPulseComp[N];
-double OriginalPulseRe[N];
-double OriginalPulseIm[N];
+double *OriginalPulseRe;
+double *OriginalPulseIm;
 double *MainResXXRe, *MainResXXIm, *MainResYYRe, *MainResYYIm;
 double *MainResXXAbs, *MainResXXAng, *MainResYYAbs, *MainResYYAng;
 double *MainResXXPhase, *MainResYYPhase;
@@ -181,6 +181,7 @@ void __fastcall TformMain::cleanView(){
         MainPosition = 0;
         WorkerPosition = 0;
         PlotPosition = 0;
+        WorkerPositionResponse = 0;
         int lePacketNumberLocal = SettingsUnitForm->lePacketNumber->Text.ToInt();
         if(lePacketNumberLocal > lePacketNumberMain)
                 lePacketNumberMain = lePacketNumberLocal;
@@ -1670,8 +1671,20 @@ void __fastcall TformMain::PlotTimerTimer(TObject *Sender)
 {
         int BufSize = 1024;
         int VarBufSize = BufSize*4;
-        if(PlotPosition < WorkerPosition) {
-                for( ; PlotPosition <= WorkerPosition; ++PlotPosition){
+        if(PlotPosition < WorkerPositionResponse) {
+                for( ; PlotPosition <= WorkerPositionResponse; ++PlotPosition){
+                        memcpy(ResXXRe,MainResXXRe+PlotPosition*1024,1024*sizeof(double));
+                        memcpy(ResXXIm,MainResXXIm+PlotPosition*1024,1024*sizeof(double));
+                        memcpy(ResYYRe,MainResYYRe+PlotPosition*1024,1024*sizeof(double));
+                        memcpy(ResYYIm,MainResYYIm+PlotPosition*1024,1024*sizeof(double));
+
+                        memcpy(ResXXAbs,MainResXXAbs+PlotPosition*1024,1024*sizeof(double));
+                        memcpy(ResYYAbs,MainResYYAbs+PlotPosition*1024,1024*sizeof(double));\
+                        memcpy(ResXXAng,MainResXXAng+PlotPosition*1024,1024*sizeof(double));
+                        memcpy(ResYYAng,MainResYYAng+PlotPosition*1024,1024*sizeof(double));
+
+                        memcpy(ResXXPhase,MainResXXPhase+PlotPosition*1024,1024*sizeof(double));
+                        memcpy(ResYYPhase,MainResYYPhase+PlotPosition*1024,1024*sizeof(double));
 						if(formOscDraw)
 						{
 							if(formOscDraw->WindowState != wsMinimized){
@@ -1872,6 +1885,10 @@ void __fastcall TformMain::SendSettingsClick(TObject *Sender)
 void __fastcall TformMain::btOriginalPulseClick(TObject *Sender)
 {
 	 unsigned int BufSize = 1024;
+         if(OriginalPulseRe) delete [] OriginalPulseRe;
+         if(OriginalPulseIm) delete [] OriginalPulseIm;
+         OriginalPulseRe = new double [BufSize];
+         OriginalPulseIm = new double [BufSize];
 
 	 for(unsigned int i=0; i<BufSize;i++)
 	 {

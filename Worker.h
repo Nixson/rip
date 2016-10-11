@@ -5,7 +5,7 @@
 //---------------------------------------------------------------------------
 #include <Classes.hpp>
 
-#define bufferSizeDouble 65536
+#define bufferSizeDouble 65536*2
 //---------------------------------------------------------------------------
 class TWorker : public TThread
 {            
