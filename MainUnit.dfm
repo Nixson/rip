@@ -1,8 +1,8 @@
 object formMain: TformMain
   Left = 282
-  Top = 31
+  Top = 32
   Width = 703
-  Height = 724
+  Height = 723
   Caption = 'formMain'
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -22,7 +22,7 @@ object formMain: TformMain
     Left = 407
     Top = 0
     Width = 280
-    Height = 647
+    Height = 646
     Align = alRight
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
@@ -37,7 +37,7 @@ object formMain: TformMain
   end
   object sbMainStatusBar: TStatusBar
     Left = 0
-    Top = 647
+    Top = 646
     Width = 687
     Height = 19
     Panels = <
@@ -58,7 +58,7 @@ object formMain: TformMain
     Left = 0
     Top = 0
     Width = 345
-    Height = 647
+    Height = 646
     Align = alLeft
     TabOrder = 2
     object Button1: TButton
@@ -773,6 +773,7 @@ object formMain: TformMain
     end
   end
   object TimerARP: TTimer
+    Interval = 100
     OnTimer = TimerARPTimer
     Left = 352
     Top = 16
@@ -823,7 +824,7 @@ object formMain: TformMain
     Top = 176
   end
   object PlotTimer: TTimer
-    Interval = 40
+    Interval = 100
     OnTimer = PlotTimerTimer
     Left = 384
     Top = 88

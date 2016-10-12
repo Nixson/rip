@@ -174,7 +174,19 @@ void __fastcall TWorker::MathAndPlot(int BufSize, int CurBufNum)
                 Synchronize(copyResult);
                 ++WorkerPositionResponse;
 }
+void __fastcall TWorker::sendData (){
+        FchanelsCvn0 = Fchanels->cvn0;
+        FchanelsCvn1 = Fchanels->cvn1;
+        FchanelsCvn2 = Fchanels->cvn2;
+        FchanelsCvn3 = Fchanels->cvn3;
+        FchanelsCvs0 = Fchanels->cvs0;
+        FchanelsCvs1 = Fchanels->cvs1;
+        FchanelsCvs2 = Fchanels->cvs2;
+        FchanelsCvs3 = Fchanels->cvs3;
+       memcpy(OriginalPulseReWorker,OriginalPulseRe,1024*sizeof(double));
+        memcpy(OriginalPulseImWorker,OriginalPulseIm,1024*sizeof(double));
 
+        }
 void __fastcall TWorker::ProcessAnswer(short int *Buffer, unsigned int CmdNum)
 {
 
@@ -201,31 +213,31 @@ void __fastcall TWorker::ProcessAnswer(short int *Buffer, unsigned int CmdNum)
                                         memset(PlotBuf,0,VarBufSize*sizeof(int));
                                  }
                                  
-                                 if(CurVarNumL==Fchanels->cvn0){
+                                 if(CurVarNumL==FchanelsCvn0){
                                         CurVarNum = 0;
                                  }
-                                 else if(CurVarNumL==Fchanels->cvn1){
+                                 else if(CurVarNumL==FchanelsCvn1){
                                         CurVarNum = 2;
                                  }
-                                 else if(CurVarNumL==Fchanels->cvn2){
+                                 else if(CurVarNumL==FchanelsCvn2){
                                         CurVarNum = 1;
                                  }
-                                 else if(CurVarNumL==Fchanels->cvn3){
+                                 else if(CurVarNumL==FchanelsCvn3){
                                         CurVarNum = 3;
                                  }
-                                 else if(CurVarNumL==Fchanels->cvs0){
+                                 else if(CurVarNumL==FchanelsCvs0){
                                         CurVarNum = 0;
                                         summChanels = true;
                                  }
-                                 else if(CurVarNumL==Fchanels->cvs1){
+                                 else if(CurVarNumL==FchanelsCvs1){
                                         CurVarNum = 2;
                                         summChanels = true;
                                  }
-                                 else if(CurVarNumL==Fchanels->cvs2){
+                                 else if(CurVarNumL==FchanelsCvs2){
                                         CurVarNum = 1;
                                         summChanels = true;
                                  }
-                                 else if(CurVarNumL==Fchanels->cvs3){
+                                 else if(CurVarNumL==FchanelsCvs3){
                                         CurVarNum = 3;
                                         summChanels = true;
                                  }
@@ -266,8 +278,6 @@ void __fastcall TWorker::ProcessAnswer(short int *Buffer, unsigned int CmdNum)
 void __fastcall TWorker::copyBuffer(){
         try {
         memcpy(BufferOnMain,WorkerBuffer+WorkerPosition*1030,1030*2);
-        memcpy(OriginalPulseReWorker,OriginalPulseRe,1024*sizeof(double));
-        memcpy(OriginalPulseImWorker,OriginalPulseIm,1024*sizeof(double));
 
         }
         catch (...){}

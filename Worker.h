@@ -32,6 +32,9 @@ public:
         short int PlotBuf[bufferSizeDouble];
 
         short int *BufferOnMain;
+        int FchanelsCvn0, FchanelsCvn1, FchanelsCvn2, FchanelsCvn3;
+        int FchanelsCvs0, FchanelsCvs1, FchanelsCvs2, FchanelsCvs3;
+        void __fastcall sendData();
 
 };
 //---------------------------------------------------------------------------
