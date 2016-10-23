@@ -48,7 +48,7 @@ __int64 BytesProcessed;
 #define ADC2_RST_MASK 128
 
 //Ключи узла коммутации (маски)
-#define SW_LPF_BPF (1)
+/*#define SW_LPF_BPF (1)
 #define SW_X_RES (1 << 1)
 #define SW_P_L   (1 << 2)
 #define SW_Rx1V  (1 << 3)
@@ -59,6 +59,32 @@ __int64 BytesProcessed;
 #define SW_Tx2V  (1 << 8)
 #define SW_Tx1H  (1 << 10)
 #define SW_Tx2H  (1 << 9)
+#define SW_VSK   (1 << 31)*/
+
+#define SW_P_L_Ka_2H_RC (1 << 0)
+#define SW_P_L_Ka_2V_RC (1 << 2)
+#define SW_P_L_Ka_1H_RC (1 << 1)
+#define SW_P_L_Ka_1V_RC (1 << 3)
+#define SW_LPF_BPF_H_RC (1 << 4)
+#define SW_LPF_BPF_V_RC (1 << 5)
+#define SW_RC_2H (1 << 6)
+#define SW_RC_1H (1 << 7)
+#define SW_RC_2V (1 << 8)
+#define SW_RC_1V (1 << 9)
+#define SW_X_H_RC (1 << 10)
+#define SW_X_V_RC (1 << 11)
+#define SW_P_L_Ka_2H_TR (1 << 12)
+#define SW_P_L_Ka_1H_TR (1 << 13)
+#define SW_P_L_Ka_2V_TR (1 << 14)
+#define SW_P_L_Ka_1V_TR (1 << 15)
+#define SW_LPF_BPF_H_TR (1 << 16)
+#define SW_LPF_BPF_V_TR (1 << 17)
+#define SW_TR_2H (1 << 18)
+#define SW_TR_1H (1 << 19)
+#define SW_TR_2V (1 << 20)
+#define SW_TR_1V (1 << 21)
+#define SW_X_H_TR (1 << 22)
+#define SW_X_V_TR (1 << 23)
 #define SW_VSK   (1 << 31)
 
 //const unsigned int PtrArr = 256*1024;
@@ -83,7 +109,42 @@ int SaveToFileEnable=0;
 int GeoFileEnable = 0;
 int RadarRefreshEnable=0;
 int IndicatorEnable=0;
+
+void oporn_sign(double fs, double tau, double fn1, double fn2, double fm1,
+                         double fm2, double fi1,double fi2);
+
 //---------------------------------------------------------------------------
+int len_op;
+double *Sop1;
+double *Sop2;
+void oporn_sign(double fs, double tau, double fn1, double fn2, double fm1,
+                         double fm2, double fi1,double fi2)
+{
+  double A;
+  double t;  // время
+  double fn; // мгновенная несущая частота
+  double fm; // мгновенная модулирующая частота
+
+  len_op = ceil(tau*fs);
+
+  Sop1 = new double[len_op];
+  Sop2 = new double[len_op];
+
+  for(int i=0; i<len_op; i++)
+    {
+      t = (double)i/fs;
+      fn = fn1 + ((fn2 - fn1)/tau)*t;
+      fm = fm1 + ((fm2 - fm1)/tau)*t;
+
+      A = (sin(2*3.14*fm*t + fi1*3.14/180));
+      Sop1[i] = ((A)*sin(2*3.14*fn*t));
+
+      A = (sin(2*3.14*fm*t + fi2*3.14/180));
+      Sop2[i] = ((A)*sin(2*3.14*fn*t));
+    }
+}
+
+
 __fastcall TSettingsUnitForm::TSettingsUnitForm(TComponent* Owner)
         : TForm(Owner)
 {
@@ -206,6 +267,12 @@ void __fastcall TSettingsUnitForm::BitBtn1Click(TObject *Sender)
         //Memo1->Lines->Add("Конечная частота несущей (МГц) = "+FloatToStr(CarFreqFin));
         double RotFreqFin = leRotFreqFin->Text.ToDouble();
         //Memo1->Lines->Add("Конечная частота ротации (МГц) = "+FloatToStr(RotFreqFin));
+
+        oporn_sign(1000,lePulseWidth->Text.ToDouble(),leCarFreqStart->Text.ToDouble(),
+        leCarFreqFin->Text.ToDouble(),leRotFreqStart->Text.ToDouble(),
+        leRotFreqFin->Text.ToDouble(),leRotPhaseCh1->Text.ToDouble(),
+        leRotPhaseCh2->Text.ToDouble());
+        
         //Если включен режим когерентной ротации
         /*if (ConfigsForm->CCoherentRotEn->Checked)
         {
@@ -318,6 +385,9 @@ void __fastcall TSettingsUnitForm::BitBtn1Click(TObject *Sender)
         }
         else mode = mode & (~ADC2_RST_MASK);
 
+        //Источник синхронизации:
+        mode |= (RGSync->ItemIndex << 8);
+        
         *((int *)(DataPtr)) = mode;
         DataPtr += sizeof(int);//4
 
@@ -352,28 +422,43 @@ void __fastcall TSettingsUnitForm::BitBtn1Click(TObject *Sender)
         unsigned int UCom = 0;
         switch (RGBand->ItemIndex)
         {
-              case  0:
-                        UCom = SW_VSK;
-                        break;
-              case  1:
-                        UCom = SW_X_RES; //  Х/резерв  , ФНЧ
-                        break;
-              case  2:
-                        UCom = SW_X_RES; //  Х/резерв
-                        break;
-              case  3:
-                        UCom = SW_LPF_BPF | SW_X_RES /*| SW_P_L*/;
-                        break;
-                default: UCom = 0;
+              case  0:  UCom |= SW_VSK; break;
+              case  1:  UCom |= (SW_X_V_TR | SW_LPF_BPF_V_RC | SW_LPF_BPF_H_RC | SW_X_V_RC ); break;
+              case  2:  UCom |= (SW_X_V_TR | SW_LPF_BPF_V_TR | SW_LPF_BPF_H_TR | SW_X_V_RC ); break;
+              case  3:  UCom |= (SW_LPF_BPF_H_TR | SW_LPF_BPF_V_TR | SW_X_H_TR | SW_X_H_RC ); break;
+              default: UCom = 0;
         }
-        if (CTx_X1V->Checked) UCom |= SW_Tx1V;
-        if (CTx_X2V->Checked) UCom |= SW_Tx2V;
-        if (CTx_X1H->Checked) UCom |= SW_Tx1H;
-        if (CTx_X2H->Checked) UCom |= SW_Tx2H;
-        if (CRx_X1V->Checked) UCom |= SW_Rx1V;
-        if (CRx_X2V->Checked) UCom |= SW_Rx2V;
-        if (CRx_X1H->Checked) UCom |= SW_Rx1H;
-        if (CRx_X2H->Checked) UCom |= SW_Rx2H;
+        switch (RGBand2->ItemIndex)
+        {
+              case  0:  UCom |= SW_VSK; break;
+              case  1:  UCom |= (SW_X_V_TR | SW_LPF_BPF_V_RC | SW_LPF_BPF_H_RC | SW_X_V_RC ); break;
+              case  2:  UCom |= (SW_X_V_TR | SW_LPF_BPF_V_TR | SW_LPF_BPF_H_TR | SW_X_V_RC ); break;
+              case  3:  UCom |= (SW_LPF_BPF_H_TR | SW_LPF_BPF_V_TR | SW_X_H_TR | SW_X_H_RC ); break;
+              default: UCom = 0;
+        }
+        if (CTx_X1V->Checked == true)
+        {
+                UCom  |= SW_TR_1V;
+        }
+        if (CTx_X2V->Checked == true) UCom  |= SW_TR_2V;
+        if (CTx_X1H->Checked == true) UCom  |= SW_TR_1H;
+        if (CTx_X2H->Checked == true) UCom  |= SW_TR_2H;
+        if (CTx_PL1V->Checked == true) UCom  |= SW_P_L_Ka_1V_TR;
+        if (CTx_PL2V->Checked == true) UCom  |= SW_P_L_Ka_2V_TR;
+        if (CTx_PL1H->Checked == true) UCom  |= SW_P_L_Ka_1H_TR;
+        if (CTx_PL2H->Checked == true) UCom  |= SW_P_L_Ka_2H_TR;
+        //Эти ключи приемника инвертированы: 1 - ключ закрыт
+        if (CRx_X1V->Checked == false) UCom |= SW_RC_1V;
+        if (CRx_X2V->Checked == false) UCom |= SW_RC_2H;  //2V и 2H подключены наоборот
+        if (CRx_X1H->Checked == false) UCom |= SW_RC_1H;
+        if (CRx_X2H->Checked == false) UCom |=  SW_RC_2V;
+        if (CRx_PL1V->Checked == false) UCom |= SW_P_L_Ka_1V_RC;
+        if (CRx_PL2V->Checked == false) UCom |= SW_P_L_Ka_2V_RC;
+        if (CRx_PL1H->Checked == false) UCom |= SW_P_L_Ka_1H_RC;
+        if (CRx_PL2H->Checked == false) UCom |= SW_P_L_Ka_2H_RC;
+
+        leUComTmp->Text = IntToStr(UCom);
+
         *((int *)(DataPtr)) = UCom;
         DataPtr += sizeof(int);//4
         //Значения аттенюаторов передатчика узла коммутации X диапазона
@@ -392,9 +477,9 @@ void __fastcall TSettingsUnitForm::BitBtn1Click(TObject *Sender)
         DataPtr += sizeof(int);//4
         //Значения аттенюаторов приемника узла коммутации X диапазона
         unsigned int AttXRx = LRx_X1V->Text.ToInt() |
-                            (LRx_X2V->Text.ToInt() << 16) |
+                            (LRx_X2H->Text.ToInt() << 16) |
                             (LRx_X1H->Text.ToInt() << 24) |     //! Исправил, было не правильно!
-                            (LRx_X2H->Text.ToInt() << 8) ;     //!
+                            (LRx_X2V->Text.ToInt() << 8) ;     //!
         *((int *)(DataPtr)) = AttXRx;
         DataPtr += sizeof(int);//4
         //Значения аттенюаторов приемника узла коммутации PL диапазона
@@ -556,8 +641,8 @@ int __fastcall TSettingsUnitForm::FreqToCode(double FreqMHz)
 int __fastcall TSettingsUnitForm::TimeToCode(double TimeUs)
 {
         // Функция пересчитывает время в мкс в количество тактов ЦАП
-        int TimeCode = (int) (TimeUs / 1000000 * DAC_FREQ /8);
-        return TimeCode;
+        double TimeCode = (TimeUs / 1000000 * DAC_FREQ /8);
+        return (int)TimeCode;
 }
 //---------------------------------------------------------------------------
 unsigned int __fastcall TSettingsUnitForm::PhaseToCode(double PhaseGrad)

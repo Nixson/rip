@@ -1910,7 +1910,7 @@ void __fastcall TformMain::btOriginalPulseClick(TObject *Sender)
 			}
 	 }
 
-         worker->sendData();
+         Worker->sendData();
 	 formOscDraw->DrawOscIQ(OriginalPulseComp, BufSize);
         return;
 }
