@@ -1,6 +1,6 @@
 object SettingsUnitForm: TSettingsUnitForm
-  Left = 758
-  Top = 54
+  Left = 688
+  Top = 20
   Width = 427
   Height = 597
   Caption = #1053#1072#1089#1090#1088#1086#1081#1082#1072' '#1056#1051#1052
@@ -162,7 +162,7 @@ object SettingsUnitForm: TSettingsUnitForm
         Left = 0
         Top = 208
         Width = 201
-        Height = 193
+        Height = 281
         Caption = #1055#1072#1088#1072#1084#1077#1090#1088#1099' '#1080#1084#1087#1091#1083#1100#1089#1085#1086#1081' '#1084#1086#1076#1091#1083#1103#1094#1080#1080
         TabOrder = 2
         object lePulseWidth: TLabeledEdit
@@ -203,6 +203,20 @@ object SettingsUnitForm: TSettingsUnitForm
           LabelSpacing = 3
           TabOrder = 2
           Text = '100000'
+        end
+        object RGSync: TRadioGroup
+          Left = 8
+          Top = 144
+          Width = 185
+          Height = 129
+          Caption = #1057#1080#1085#1093#1088#1086#1085#1080#1079#1072#1094#1080#1103
+          ItemIndex = 0
+          Items.Strings = (
+            #1042#1085#1091#1090#1088#1077#1085#1085#1103#1103
+            'GPS'
+            #1042#1085#1077#1096#1085#1103#1103
+            #1048#1084#1080#1090#1072#1090#1086#1088' GPS')
+          TabOrder = 3
         end
       end
       object GroupBox4: TGroupBox
@@ -337,22 +351,22 @@ object SettingsUnitForm: TSettingsUnitForm
           TabOrder = 3
         end
       end
-      object BitBtn1: TBitBtn
-        Left = 0
-        Top = 440
-        Width = 201
-        Height = 89
-        Caption = #1047#1072#1076#1072#1090#1100' '#1087#1072#1088#1072#1084#1077#1090#1088#1099' '
-        TabOrder = 6
-        OnClick = BitBtn1Click
-      end
       object CRefresh: TCheckBox
         Left = 216
         Top = 440
         Width = 97
         Height = 17
         Caption = 'CRefresh'
+        TabOrder = 6
+      end
+      object BitBtn1: TBitBtn
+        Left = 0
+        Top = 496
+        Width = 201
+        Height = 33
+        Caption = #1047#1072#1076#1072#1090#1100' '#1087#1072#1088#1072#1084#1077#1090#1088#1099' '
         TabOrder = 7
+        OnClick = BitBtn1Click
       end
     end
     object Net: TTabSheet
@@ -594,6 +608,51 @@ object SettingsUnitForm: TSettingsUnitForm
           TabOrder = 11
           Text = '0'
         end
+        object CTx_PL1V: TCheckBox
+          Left = 64
+          Top = 112
+          Width = 97
+          Height = 17
+          Caption = 'L1'
+          TabOrder = 12
+        end
+        object CTx_PL2V: TCheckBox
+          Left = 64
+          Top = 152
+          Width = 97
+          Height = 17
+          Caption = 'P1'
+          TabOrder = 13
+        end
+        object CTx_PL1H: TCheckBox
+          Left = 216
+          Top = 112
+          Width = 97
+          Height = 17
+          Caption = 'L2'
+          TabOrder = 14
+        end
+        object CTx_PL2H: TCheckBox
+          Left = 216
+          Top = 152
+          Width = 97
+          Height = 17
+          Caption = 'P2'
+          TabOrder = 15
+        end
+        object leUComTmp: TLabeledEdit
+          Left = 288
+          Top = 24
+          Width = 97
+          Height = 21
+          EditLabel.Width = 58
+          EditLabel.Height = 13
+          EditLabel.Caption = 'leUComTmp'
+          LabelPosition = lpAbove
+          LabelSpacing = 3
+          TabOrder = 16
+          Text = '0'
+        end
       end
       object GReceiver: TGroupBox
         Left = 8
@@ -738,20 +797,38 @@ object SettingsUnitForm: TSettingsUnitForm
           TabOrder = 11
           Text = '0'
         end
-      end
-      object RGBand: TRadioGroup
-        Left = 8
-        Top = 0
-        Width = 393
-        Height = 33
-        Columns = 4
-        ItemIndex = 0
-        Items.Strings = (
-          #1042#1057#1050
-          'P '#1076#1080#1072#1087#1072#1079#1086#1085
-          'L '#1076#1080#1072#1087#1072#1079#1086#1085
-          'X '#1076#1080#1072#1087#1072#1079#1086#1085)
-        TabOrder = 2
+        object CRx_PL1V: TCheckBox
+          Left = 64
+          Top = 112
+          Width = 97
+          Height = 17
+          Caption = 'L1'
+          TabOrder = 12
+        end
+        object CRx_PL2V: TCheckBox
+          Left = 64
+          Top = 152
+          Width = 97
+          Height = 17
+          Caption = 'P1'
+          TabOrder = 13
+        end
+        object CRx_PL1H: TCheckBox
+          Left = 216
+          Top = 112
+          Width = 97
+          Height = 17
+          Caption = 'L2'
+          TabOrder = 14
+        end
+        object CRx_PL2H: TCheckBox
+          Left = 216
+          Top = 152
+          Width = 97
+          Height = 17
+          Caption = 'P2'
+          TabOrder = 15
+        end
       end
       object GGeterodin: TGroupBox
         Left = 8
@@ -759,7 +836,7 @@ object SettingsUnitForm: TSettingsUnitForm
         Width = 393
         Height = 145
         Caption = #1043#1077#1090#1077#1088#1086#1076#1080#1085
-        TabOrder = 3
+        TabOrder = 2
         object LPh_Tx_X1V: TLabeledEdit
           Left = 8
           Top = 72
@@ -885,6 +962,36 @@ object SettingsUnitForm: TSettingsUnitForm
           TabOrder = 9
           Text = '8740'
         end
+      end
+      object RGBand: TRadioGroup
+        Left = 8
+        Top = 0
+        Width = 185
+        Height = 33
+        Caption = #1050#1072#1085#1072#1083' 1'
+        Columns = 4
+        ItemIndex = 0
+        Items.Strings = (
+          #1042#1057#1050
+          'P1'
+          'L1'
+          'X1')
+        TabOrder = 3
+      end
+      object RGBand2: TRadioGroup
+        Left = 200
+        Top = 0
+        Width = 201
+        Height = 33
+        Caption = #1050#1072#1085#1072#1083' 2'
+        Columns = 4
+        ItemIndex = 0
+        Items.Strings = (
+          #1042#1057#1050
+          'P2'
+          'L2'
+          'X2')
+        TabOrder = 4
       end
     end
   end

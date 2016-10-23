@@ -16,7 +16,7 @@ TShowThread * ShowThread;
 //TIndicatorThread * IndicatorThread;
 //TSpectrumFixFigure *OscView;
 
-int SpLenMax = 1024*1024*16;
+int SpLenMax = 1024*1024*23;
 int Td = 1;
 
 extern unsigned int WorkerCmdNum;

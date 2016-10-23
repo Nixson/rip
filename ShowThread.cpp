@@ -398,7 +398,7 @@ void __fastcall TShowThread::Cmd8(char * buf, unsigned int Bytes)
 void __fastcall TShowThread::Cmd10(char * buf, unsigned int Bytes)
 {
         OscLen = (*(((int*) buf) + 13));
-        OscNumber = 16;(*(((int*) buf) + 15));
+        OscNumber = 23;//(*(((int*) buf) + 15));
         /*if (OscNumber > 4)
         {
                 OscNumber = 4;

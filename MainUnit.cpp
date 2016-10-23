@@ -37,6 +37,7 @@
 
 #define RAD 57.295779513082320877
 #define MaxSpeed 50
+#define PacketCount 46
 
 TformMain *formMain;
 TformDraw *formOscDraw;
@@ -189,7 +190,7 @@ void __fastcall TformMain::cleanView(){
         if(lePacketNumberLocal > lePacketNumberMain)
                 lePacketNumberMain = lePacketNumberLocal;
         if(WorkerBuffer) delete [] WorkerBuffer;
-        WorkerBuffer = new short int [lePacketNumberMain*1030*32];
+        WorkerBuffer = new short int [lePacketNumberMain*1030*PacketCount];
 
         if(MainResXXRe) delete [] MainResXXRe;
         if(MainResXXIm) delete [] MainResXXIm;
@@ -1374,7 +1375,7 @@ void __fastcall TformMain::PlotDrawParam(int type, double *DataBuf, int VarBufSi
 void __fastcall TformMain::FileReadTimerTimer(TObject *Sender)
 {
         //FileReadTimer->Enabled = false;
-        for(int i = 0; i < 31; ++i){
+        for(int i = 0; i < PacketCount; ++i){
                 if(FileReadTimer->Enabled){
                         FileReadTimerProc();
                 }
@@ -1435,7 +1436,7 @@ void __fastcall TformMain::FileReadTimerProc()
 			FileBuffer = new short int [1024+12];
 		}
                 if(!FileBufferFind)
-                        FileBufferFind = new short int [32*(1024+112)];
+                        FileBufferFind = new short int [PacketCount*(1024+112)];
                 memset(FileBuffer, 0, 1024*2+24);
 		// заполнение значений счётчиков
 		memcpy(FileBuffer, &FileBufNum, 4);
@@ -1445,10 +1446,10 @@ void __fastcall TformMain::FileReadTimerProc()
 		{
 			// чтение из Потока памяти
                         if(FileVarNum == 0){
-                                memset(FileBufferFind, 0, 32*(1024+112));
-			        unsigned int BufSize = FileBufNum*(112+FileReadBlockSize*32*2);
+                                memset(FileBufferFind, 0, PacketCount*(1024+112));
+			        unsigned int BufSize = FileBufNum*(112+FileReadBlockSize*PacketCount*2);
                                 FileResponseMemory->Position = (__int64) (BufSize);
-                                FileResponseMemory->Read(FileBufferFind, FileReadBlockSize*32*2+112);
+                                FileResponseMemory->Read(FileBufferFind, FileReadBlockSize*PacketCount*2+112);
                         }
 			unsigned int CurBytePos = FileVarNum*FileReadBlockSize;
                         memcpy(FileBuffer+6,FileBufferFind+56+CurBytePos,FileReadBlockSize*2);
@@ -1480,8 +1481,8 @@ void __fastcall TformMain::FileReadTimerProc()
 		{*/
 			FileSubBufNum = 0;
 			FileVarNum++;
-                        if(FileVarNum == 31) FileSubBufNum = 1;
-			if(FileVarNum >= 32)
+                        if(FileVarNum == PacketCount-1) FileSubBufNum = 1;
+			if(FileVarNum >= PacketCount)
 			{
 				FileVarNum = 0;
 				FileBufNum++;
@@ -1564,7 +1565,7 @@ bool __fastcall TformMain::InitFileRead(AnsiString FileName, bool Message)
 		__int64 Size = FileResponseMemory->Size;
 		// выделение массива для данных из файла, сброс счётчиков
 		FileBuffer = new short int [1024+12];
-                FileBufferFind = new short int [32*(1024+112)];
+                FileBufferFind = new short int [PacketCount*(1024+112)];
                 int FileReadBSize;
                 if(FileReadType == 1) {
                         int *FileBufferTmp = new int[112];
@@ -1572,7 +1573,7 @@ bool __fastcall TformMain::InitFileRead(AnsiString FileName, bool Message)
                         FileResponseMemory->Position = (__int64) (0);
 			FileResponseMemory->Read(FileBufferTmp, 112);
                         FileReadBlockSize = FileBufferTmp[13];
-                        int bSize = 2*(FileReadBlockSize*32+112);
+                        int bSize = 2*(FileReadBlockSize*PacketCount+112);
                         FileReadBSize = Size/bSize;
                         AnsiString FileReadBSizeStr = IntToStr(FileReadBSize);
                         SettingsUnitForm->lePacketNumber->Text = FileReadBSizeStr;
@@ -1973,7 +1974,7 @@ void __fastcall TformMain::bPRClick(TObject *Sender)
 	 delete [] Buffer;
 
 	 PulseResponseMemory = new TMemoryStream();
-	 unsigned int Size = leNumberOfMultOsc->Text.ToInt()*formSettings->leSubBufNum->Text.ToInt()*32*1024;
+	 unsigned int Size = leNumberOfMultOsc->Text.ToInt()*formSettings->leSubBufNum->Text.ToInt()*PacketCount*1024;
 	 PulseResponseMemory->SetSize((int)Size);
 	 FrameCnt = 0;
 	 LostPacketCnt = 0;
@@ -2087,7 +2088,7 @@ void __fastcall TformMain::bAvgPRClick(TObject *Sender)
 	 delete [] Buffer;
 
 	 PulseResponseMemory = new TMemoryStream();
-	 unsigned int Size = leNumberOfMultOsc->Text.ToInt()*formSettings->leSubBufNum->Text.ToInt()*32*sizeof(int)*1024;
+	 unsigned int Size = leNumberOfMultOsc->Text.ToInt()*formSettings->leSubBufNum->Text.ToInt()*PacketCount*sizeof(int)*1024;
 	 PulseResponseMemory->SetSize((int)Size);
 	 FrameCnt = 0;
 	 LostPacketCnt = 0;

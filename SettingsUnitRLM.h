@@ -50,7 +50,6 @@ __published:	// IDE-managed Components
         TCheckBox *CDac2Rst;
         TCheckBox *CAdc1Rst;
         TCheckBox *CAdc2Rst;
-        TBitBtn *BitBtn1;
         TCheckBox *CRefresh;
         TTabSheet *Net;
         TLabeledEdit *EIpAdr;
@@ -82,7 +81,6 @@ __published:	// IDE-managed Components
         TLabeledEdit *LRx_PL2V;
         TLabeledEdit *LRx_PL1H;
         TLabeledEdit *LRx_PL2H;
-        TRadioGroup *RGBand;
         TGroupBox *GGeterodin;
         TLabeledEdit *LPh_Tx_X1V;
         TLabeledEdit *LPh_Tx_X2V;
@@ -103,6 +101,19 @@ __published:	// IDE-managed Components
         TButton *btnCMD9;
         TTimer *checkView;
         TClientSocket *ClientSocket1;
+        TCheckBox *CTx_PL1V;
+        TCheckBox *CTx_PL2V;
+        TCheckBox *CTx_PL1H;
+        TCheckBox *CTx_PL2H;
+        TCheckBox *CRx_PL1V;
+        TCheckBox *CRx_PL2V;
+        TCheckBox *CRx_PL1H;
+        TCheckBox *CRx_PL2H;
+        TLabeledEdit *leUComTmp;
+        TRadioGroup *RGBand;
+        TRadioGroup *RGBand2;
+        TRadioGroup *RGSync;
+        TBitBtn *BitBtn1;
         void __fastcall FormCreate(TObject *Sender);
         void __fastcall BitBtn1Click(TObject *Sender);
         void __fastcall btnCMD1Click(TObject *Sender);
